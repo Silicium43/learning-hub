@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Learning Hub</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --accent-es: #f59e0b;
+            --accent-pt: #10b981;
+            --accent-fr: #3b82f6;
+            --accent-jp: #f43f5e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+			padding-bottom: 100px; 
+            box-sizing: border-box;
+        }
+
+        .container { width: 100%; max-width: 900px; }
+
+        header { text-align: center; margin-bottom: 2rem; position: relative; }
+
+        /* Sélecteur de langue */
+        .lang-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .lang-btn {
+            background: var(--card);
+            border: 1px solid #334155;
+            color: var(--text);
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .lang-btn.active {
+            background: var(--accent-fr);
+            border-color: var(--accent-fr);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #3b82f6, #10b981, #f43f5e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .welcome { color: var(--muted); font-size: 1.1rem; margin-bottom: 30px; }
+
+        /* Titres de sections améliorés */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 40px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .es-t { color: var(--accent-es); }
+        .pt-t { color: var(--accent-pt); }
+        .fr-t { color: var(--accent-fr); }
+        .jp-t { color: var(--accent-jp); }
+
+        .grid {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .card {
+            background: var(--card);
+            padding: 1.2rem;
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            border: 1px solid #334155;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            background: #24324d;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .info { display: flex; flex-direction: column; }
+        .title { font-weight: 600; font-size: 1.1rem; }
+        .desc { color: var(--muted); font-size: 0.85rem; }
+
+        .es:hover { border-color: var(--accent-es); }
+        .pt:hover { border-color: var(--accent-pt); }
+        .fr:hover { border-color: var(--accent-fr); }
+        .jp:hover { border-color: var(--accent-jp); }
+
+        @media (max-width: 600px) { h1 { font-size: 1.8rem; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="setLang('fr')">FR 🇫🇷</button>
+                <button class="lang-btn" onclick="setLang('en')">EN 🇬🇧</button>
+                <button class="lang-btn" onclick="setLang('es')">ES 🇪🇸</button>
+            </div>
+            <h1 id="main-title">Learning Hub</h1>
+            <p class="welcome" id="sub-title">Choisis ton module d'entraînement</p>
+        </header>
+
+        <div class="section-header">
+            <span class="section-title es-t">Español 💃</span>
+        </div>
+        <div class="grid">
+            <a href="espconj.html" class="card es">
+                <div class="icon">🇨🇱</div>
+                <div class="info">
+                    <span class="title">Español Master</span>
+                    <span class="desc" data-key="desc-es-conj">Conjugaison et grammaire espagnole</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="section-header">
+            <span class="section-title pt-t">Português 🏖️</span>
+        </div>
+        <div class="grid">
+            <a href="porconjug.html" class="card pt">
+                <div class="icon">🇧🇷</div>
+                <div class="info">
+                    <span class="title">Português Master</span>
+                    <span class="desc" data-key="desc-pt-conj">Entraînement aux verbes portugais</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="section-header">
+            <span class="section-title fr-t">Français 🥐</span>
+        </div>
+        <div class="grid">
+            <a href="frconjug.html" class="card fr">
+                <div class="icon">🇫🇷</div>
+                <div class="info">
+                    <span class="title">Français Master</span>
+                    <span class="desc" data-key="desc-fr-conj">Maîtrise de la conjugaison française</span>
+                </div>
+            </a>
+            <a href="vocfr2.html" class="card fr">
+                <div class="icon">📝</div>
+                <div class="info">
+                    <span class="title" data-key="title-fr-quiz">Quiz de vocabulaire</span>
+                    <span class="desc" data-key="desc-fr-quiz">Vocabulaire et tests de français</span>
+                </div>
+            </a>
+			
+        </div>
+
+        <div class="section-header">
+            <span class="section-title jp-t">日本語 🍣</span>
+        </div>
+        <div class="grid">
+            <a href="japconjug.html" class="card jp">
+                <div class="icon">⚙️</div>
+                <div class="info">
+                    <span class="title">JP Conjugation</span>
+                    <span class="desc" data-key="desc-jp-conj">Formes verbales et politesse</span>
+                </div>
+            </a>
+            <a href="japkanji.html" class="card jp">
+                <div class="icon">⛩️</div>
+                <div class="info">
+                    <span class="title">Kanji Master</span>
+                    <span class="desc" data-key="desc-jp-kanji">Base de données complète Kanji</span>
+                </div>
+            </a>
+            <a href="japvoc.html" class="card jp">
+                <div class="icon">📖</div>
+                <div class="info">
+                    <span class="title">JLPT Vocab</span>
+                    <span class="desc" data-key="desc-jp-voc">Vocabulaire essentiel et verbes</span>
+                </div>
+            </a>
+        </div>
+	<div class="section-header">
+            <span class="section-title jp-t">Autres 🕹️</span>
+        </div>
+        <div class="grid">
+            <a href="jeudepartements.html" class="card fr">
+    <div class="icon">🗺️</div>
+    <div class="info">
+        <span class="title">Départements</span>
+        <span class="desc" data-key="desc-fr-depts">Apprendre la géographie française</span>
+    </div>
+</a>
+        </div>	
+	
+    </div>
+
+    <script>
+        const translations = {
+            fr: {
+                subtitle: "Choisis ton module d'entraînement",
+                "desc-es-conj": "Conjugaison et grammaire espagnole",
+                "desc-pt-conj": "Entraînement aux verbes portugais",
+                "desc-fr-conj": "Maîtrise de la conjugaison française",
+                "title-fr-quiz": "Quiz de vocabulaire",
+                "desc-fr-quiz": "Vocabulaire en français",
+                "desc-jp-conj": "Formes verbales et politesse",
+                "desc-jp-kanji": "Base de données complète Kanji",
+                "desc-jp-voc": "Vocabulaire essentiel et verbes",
+				"desc-fr-depts": "Apprendre la géographie française"
+            },
+            en: {
+                subtitle: "Choose your training module",
+                "desc-es-conj": "Spanish conjugation and grammar",
+                "desc-pt-conj": "Portuguese verb training",
+                "desc-fr-conj": "Master French conjugation",
+                "title-fr-quiz": "Vocabulary quizz",
+                "desc-fr-quiz": "French vocabulary test",
+                "desc-jp-conj": "Verb forms and politeness",
+                "desc-jp-kanji": "Complete Kanji database",
+                "desc-jp-voc": "Essential vocabulary and verbs",
+				"desc-fr-depts": "Learn French geography"
+            },
+            es: {
+                subtitle: "Elige tu módulo de entrenamiento",
+                "desc-es-conj": "Conjugación y gramática española",
+                "desc-pt-conj": "Entrenamiento de verbos portugueses",
+                "desc-fr-conj": "Dominio de la conjugación francesa",
+                "title-fr-quiz": "Quiz de vocabulario",
+                "desc-fr-quiz": "Vocabulario en francés",
+                "desc-jp-conj": "Formas verbales y cortesía",
+                "desc-jp-kanji": "Base de datos completa de Kanji",
+                "desc-jp-voc": "Vocabulario esencial y verbos",
+				"desc-fr-depts": "Aprender la geografía francesa"
+            }
+        };
+
+        function setLang(lang) {
+            // Update buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.toLowerCase().includes(lang));
+            });
+
+            // Update texts
+            document.getElementById('sub-title').innerText = translations[lang].subtitle;
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+        }
+    </script>
+</body>
+</html>

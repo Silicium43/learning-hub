@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Español Master 🇪🇸</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text-dim: #94a3b8;
+            --esp-primary: #f59e0b; --err: #ef4444; --ok: #10b981; --gold: #f59e0b;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg); color: var(--text); margin: 0;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px;
+        }
+        .app-container { width: 100%; max-width: 500px; text-align: center; }
+        .card { background: var(--card); padding: 2rem; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; position: relative; margin-bottom: 20px; }
+        .screen { display: none; } .active { display: block; }
+        .streak-display { font-size: 1.2rem; font-weight: bold; color: var(--gold); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        h1 { margin: 0 0 10px 0; font-size: 2.2rem; font-weight: 900; }
+        select, input { width: 100%; padding: 16px; border-radius: 12px; border: 2px solid #334155; background: var(--bg); color: white; font-size: 16px; margin-bottom: 15px; outline: none; }
+        .btn-primary { width: 100%; padding: 18px; border-radius: 12px; border: none; background: var(--esp-primary); color: white; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        .explanation-box { background: rgba(255,255,255,0.03); border-left: 4px solid var(--esp-primary); padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; font-size: 0.9rem; }
+        .stats-card { background: rgba(30, 41, 59, 0.7); padding: 1.5rem; border-radius: 16px; border: 1px dashed #475569; margin-top: 20px; }
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .stats-table th { color: var(--text-dim); text-align: left; padding-bottom: 10px; }
+        .stats-table td { padding: 8px 0; border-bottom: 1px solid #334155; text-align: left; }
+        .checkbox-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: var(--text-dim); cursor: pointer; justify-content: center; }
+        .checkbox-container input { width: auto; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div id="screen-setup" class="screen active">
+            <div class="streak-display">🔥 <span id="streak-setup">0</span></div>
+            <h1>Español Master 🇪🇸</h1>
+            
+            <div class="card">
+                <label id="lbl-ui">Interface Language:</label>
+                <select id="ui-lang-select" onchange="changeUILanguage()">
+                    <option value="fr">Français 🇫🇷</option>
+                    <option value="en">English 🇬🇧</option>
+                </select>
+
+                <label id="lbl-tense">Tiempo / Tense:</label>
+                <select id="time-select">
+                    <option value="Presente">Presente</option>
+                    <option value="Futuro">Futuro</option>
+                    <option value="Pretérito Perfecto">Pretérito Perfecto (Passé C.)</option>
+                    <option value="Pretérito Indefinido">Pretérito Indefinido (Passé S.)</option>
+                </select>
+
+                <label class="checkbox-container">
+                    <input type="checkbox" id="irr-toggle"> <span id="lbl-irr">Inclure les irréguliers</span>
+                </label>
+
+                <button id="btn-start" class="btn-primary" onclick="startQuiz()">¡Vamos! 🚀</button>
+            </div>
+
+            <div class="stats-card">
+                <h3 id="stats-title">Top 10 Erreurs</h3>
+                <table class="stats-table">
+                    <thead><tr><th id="th-verb">Verbe</th><th id="th-err">Erreurs</th></tr></thead>
+                    <tbody id="stats-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-quiz" class="screen">
+            <div class="streak-display">🔥 <span id="streak-quiz">0</span></div>
+            <h1 id="quiz-title">Práctica 🇪🇸</h1>
+            <div class="card">
+                <div id="display-verb" style="font-size: 2.2rem; font-weight: 900; color: var(--esp-primary);">---</div>
+                <div id="display-trans" style="font-style: italic; color: var(--text-dim); margin-bottom: 15px;">---</div>
+                <div id="display-tense" style="text-transform:uppercase; font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">---</div>
+                <div id="display-prompt" style="font-size:1.4rem; margin-bottom:20px;">---</div>
+                <input type="text" id="user-input" autocomplete="off" autocorrect="off" spellcheck="false">
+                <div id="feedback"></div>
+                <div id="explanation"></div>
+            </div>
+            <button class="btn-primary" style="background:#475569" onclick="location.reload()">Menu</button>
+        </div>
+    </div>
+
+<script>
+    const uiStrings = {
+        fr: {
+            start: "Commencer 🚀", quit: "Menu", topErrors: "Top 10 Erreurs", practice: "Pratique 🇪🇸",
+            placeholder: "Tapez la réponse...", correct: "Excellent !", incorrect: "Faux, recopiez :",
+            lblUi: "Langue de l'interface :", lblTense: "Temps :", lblIrr: "Inclure les irréguliers",
+            thVerb: "Verbe", thErr: "Erreurs"
+        },
+        en: {
+            start: "Start 🚀", quit: "Menu", topErrors: "Top 10 Errors", practice: "Practice 🇪🇸",
+            placeholder: "Type the answer...", correct: "Excellent!", incorrect: "Wrong, copy this:",
+            lblUi: "Interface Language:", lblTense: "Tense:", lblIrr: "Include irregulars",
+            thVerb: "Verb", thErr: "Errors"
+        }
+    };
+
+    const endings = {
+    "Presente": {
+        "ar": ["o", "as", "a", "amos", "an", "an"], // Index 4 (Ustedes) = Index 5 (Ellos)
+        "er": ["o", "es", "e", "emos", "en", "en"],
+        "ir": ["o", "es", "e", "imos", "en", "en"]
+		},
+    "Futuro": {
+        "all": ["é", "ás", "á", "emos", "án", "án"]
+		},
+    "Pretérito Indefinido": {
+        "ar": ["é", "aste", "ó", "amos", "aron", "aron"],
+        "er": ["í", "iste", "ió", "imos", "ieron", "ieron"],
+        "ir": ["í", "iste", "ió", "imos", "ieron", "ieron"]
+		}
+	};
+
+    const db = {
+        people: ["Yo", "Tú", "Él/Ella", "Nosotros", "Ustedes", "Ellos/Ellas"],
+        verbs: [
+            { es: "Hablar", fr: "Parler", en: "To speak", group: "ar" },
+            { es: "Comer", fr: "Manger", en: "To eat", group: "er" },
+            { es: "Vivir", fr: "Vivre", en: "To live", group: "ir" },
+            { es: "Ser", fr: "Être", en: "To be", irr: true, 
+                "Presente": ["soy", "eres", "es", "somos", "sois", "son"],
+                "Futuro": ["seré", "serás", "será", "seremos", "seréis", "serán"],
+                "Pretérito Perfecto": ["he sido", "has sido", "ha sido", "hemos sido", "habéis sido", "han sido"],
+                "Pretérito Indefinido": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"]
+            },
+            { es: "Ir", fr: "Aller", en: "To go", irr: true,
+                "Presente": ["voy", "vas", "va", "vamos", "vais", "vont"],
+                "Pretérito Indefinido": ["fui", "fuiste", "fue", "fuimos", "fuisteis", "fueron"]
+            }
+        ]
+    };
+
+    let userData = JSON.parse(localStorage.getItem('esp_master_v1')) || { streak: 0, verbs: {}, uiLang: 'fr' };
+    let state = { currentQ: null, isWaiting: false };
+
+    function changeUILanguage() {
+        userData.uiLang = document.getElementById('ui-lang-select').value;
+        save();
+        updateUI();
+    }
+
+    function translateStaticInterface() {
+        const s = uiStrings[userData.uiLang];
+        document.getElementById('btn-start').innerText = s.start;
+        document.getElementById('stats-title').innerText = s.topErrors;
+        document.getElementById('lbl-ui').innerText = s.lblUi;
+        document.getElementById('lbl-tense').innerText = s.lblTense;
+        document.getElementById('lbl-irr').innerText = s.lblIrr;
+        document.getElementById('th-verb').innerText = s.thVerb;
+        document.getElementById('th-err').innerText = s.thErr;
+        document.getElementById('user-input').placeholder = s.placeholder;
+        renderStats();
+    }
+
+    function updateUI() {
+        document.getElementById('streak-setup').innerText = userData.streak;
+        document.getElementById('streak-quiz').innerText = userData.streak;
+        document.getElementById('ui-lang-select').value = userData.uiLang;
+        translateStaticInterface();
+    }
+
+    function renderStats() {
+        const body = document.getElementById('stats-body');
+        body.innerHTML = '';
+        const sorted = Object.entries(userData.verbs)
+            .filter(([_, d]) => d.err > 0)
+            .sort((a,b) => b[1].err - a[1].err).slice(0, 10);
+        sorted.forEach(([n, d]) => {
+            body.innerHTML += `<tr><td>${n}</td><td style="color:var(--err); font-weight:bold">${d.err}</td></tr>`;
+        });
+    }
+
+    function startQuiz() {
+        document.getElementById('screen-setup').classList.remove('active');
+        document.getElementById('screen-quiz').classList.add('active');
+        next();
+    }
+
+    function next() {
+    state.isWaiting = false;
+    document.getElementById('explanation').style.display = 'none';
+    document.getElementById('feedback').innerText = '';
+    const input = document.getElementById('user-input');
+    input.value = ''; 
+    input.style.borderColor = "#334155";
+    
+    // 1. Filtrage des verbes (Irréguliers ou non)
+    const includeIrr = document.getElementById('irr-toggle').checked;
+    let pool = db.verbs.filter(v => includeIrr ? true : !v.irr);
+    
+    const verb = pool[Math.floor(Math.random() * pool.length)];
+    const tense = document.getElementById('time-select').value;
+    const pIdx = Math.floor(Math.random() * 6); // 0 à 5
+    
+    // 2. Logique Chili/Latam : Ustedes (index 4) se conjugue comme Ellos (index 5)
+    // On utilise conjIdx pour piocher la bonne terminaison dans nos tableaux
+    const conjIdx = (pIdx === 4) ? 5 : pIdx;
+    
+    let answer = "";
+    let rule = "";
+
+    // 3. Calcul de la réponse
+    if (verb.irr && verb[tense]) { 
+        // Cas des verbes totalement irréguliers stockés dans la DB
+        answer = verb[tense][conjIdx];
+        rule = "Verbo irregular (memorización)";
+    } else {
+        const root = verb.es.slice(0, -2).toLowerCase();
+        const group = verb.group; // ar, er ou ir
+
+        if (tense === "Presente") {
+            const term = endings["Presente"][group][conjIdx];
+            answer = root + term;
+            rule = `${root} + ${term}`;
+        } 
+        else if (tense === "Futuro") {
+            // Le futur se forme sur l'infinitif complet
+            const term = endings["Futuro"]["all"][conjIdx];
+            answer = verb.es.toLowerCase() + term;
+            rule = `${verb.es.toLowerCase()} + ${term}`;
+        } 
+        else if (tense === "Pretérito Indefinido") {
+            // Passé Simple
+            const term = endings["Pretérito Indefinido"][group][conjIdx];
+            answer = root + term;
+            rule = `${root} + ${term}`;
+        } 
+        else if (tense === "Pretérito Perfecto") {
+            // Passé Composé
+            const aux = ["he", "has", "ha", "hemos", "han", "han"]; // Note le double "han" pour Ustedes/Ellos
+            const participio = (group === "ar") ? root + "ado" : root + "ido";
+            answer = aux[conjIdx] + " " + participio;
+            rule = `${aux[conjIdx]} + ${participio}`;
+        }
+    }
+
+    // 4. Mise à jour de l'interface
+    state.currentQ = { 
+        verb: verb.es, 
+        tense: tense, 
+        person: db.people[pIdx], 
+        answer: answer.toLowerCase(), 
+        trans: verb[userData.uiLang], 
+        rule: rule 
+    };
+
+    document.getElementById('display-verb').innerText = state.currentQ.verb;
+    document.getElementById('display-trans').innerText = state.currentQ.trans;
+    document.getElementById('display-tense').innerText = state.currentQ.tense;
+    document.getElementById('display-prompt').innerText = state.currentQ.person + " ...";
+}
+
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const val = e.target.value.trim().toLowerCase();
+            const correct = state.currentQ.answer.toLowerCase();
+            if(!userData.verbs[state.currentQ.verb]) userData.verbs[state.currentQ.verb] = {err:0};
+
+            if (val === correct) {
+                if (!state.isWaiting) userData.streak++;
+                document.getElementById('feedback').innerHTML = `<span style="color:var(--ok)">${uiStrings[userData.uiLang].correct}</span>`;
+                save(); updateUI(); setTimeout(next, 800);
+            } else {
+                state.isWaiting = true;
+                userData.verbs[state.currentQ.verb].err++; userData.streak = 0;
+                document.getElementById('feedback').innerHTML = `<span style="color:var(--err)">${uiStrings[userData.uiLang].incorrect}</span>`;
+                document.getElementById('explanation').innerHTML = `<div class="explanation-box">👉 <b>${state.currentQ.answer}</b><br><small>${state.currentQ.rule}</small></div>`;
+                document.getElementById('explanation').style.display = 'block';
+                e.target.style.borderColor = "var(--err)";
+                save(); updateUI();
+            }
+        }
+    });
+
+    function save() { localStorage.setItem('esp_master_v1', JSON.stringify(userData)); }
+    updateUI();
+</script>
+<a href="index.html" style="position: fixed; top: 10px; left: 10px; background: #1e293b; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-size: 14px; border: 1px solid #334155; z-index: 1000;">
+    🏠 Accueil
+</a>
+</body>
+</html>

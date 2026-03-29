@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Verbos 🇫🇷</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #4169e1;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --gold: #f59e0b;
+            --focus: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .section { display: none; }
+        .active { display: block; }
+
+        .btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px 0;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-focus { background-color: var(--focus); }
+        .btn-secondary { background-color: #475569; }
+        .btn-option { 
+            background-color: transparent; 
+            border: 2px solid var(--accent-blue); 
+            color: var(--text-color); 
+            margin-top: 10px; 
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 2px solid var(--accent-blue);
+            background: #334155;
+            color: white;
+            text-align: center;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #334155;
+            height: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .stats-table-container {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            background: #0f172a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .error-count { color: var(--error); font-weight: bold; }
+        .mode-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; background: #334155; margin-bottom: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="setup" class="section active">
+        <h1>Quiz Infinito 🇫🇷</h1>
+        <p style="color: var(--text-muted);">Domina los verbos franceses</p>
+        <button class="btn" onclick="startQuiz('mcq')">Modo Opción Múltiple 🔘</button>
+        <button class="btn" onclick="startQuiz('type')">Modo Escritura ✍️</button>
+        <div id="focusZone"></div>
+        <button class="btn btn-secondary" onclick="showStats()">Estadísticas 📊</button>
+    </div>
+
+    <div id="quiz" class="section">
+        <div id="quizBadge" class="mode-badge">Clásico</div>
+        <div class="progress-container" id="progCont"><div class="progress-bar" id="progBar"></div></div>
+        <div style="display:flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+            <span>Racha: <span id="streak" style="color:var(--gold)">0</span> 🔥</span>
+            <span>Récord: <span id="bestStreak" style="color:var(--gold)">0</span></span>
+        </div>
+        <h2 id="wordToTranslate">...</h2>
+        <div id="optionsContainer"></div>
+        <div id="inputContainer" style="display:none;">
+            <input type="text" id="userInput" placeholder="Escribe en francés..." autocomplete="off" autocorrect ="off" spellcheck="false">
+            <button class="btn" id="submitBtn" onclick="checkTypedAnswer()">Validar ✅</button>
+        </div>
+        <div id="feedback" style="margin-top:15px; font-weight:bold; min-height: 1.5em;"></div>
+        <button class="btn btn-secondary" style="margin-top:20px; font-size: 0.8rem;" onclick="location.reload()">Salir</button>
+    </div>
+
+    <div id="stats" class="section">
+        <h2>Tus Errores 📈</h2>
+        <div class="stats-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Verbo</th>
+                        <th>Errores</th>
+                        <th>Aciertos</th>
+                    </tr>
+                </thead>
+                <tbody id="statsBody"></tbody>
+            </table>
+        </div>
+        <button class="btn" style="margin-top:20px;" onclick="switchSection('setup')">Volver</button>
+        <div style="margin-top:20px; font-size: 0.7rem; color: var(--text-muted); cursor: pointer; text-decoration: underline;" onclick="resetSave()">Borrar todos los datos</div>
+    </div>
+</div>
+
+<script>
+    const allVerbs = [{ fr: "être", es: "ser/estar" }, { fr: "avoir", es: "tener/haber" }, { fr: "faire", es: "hacer" }, { fr: "dire", es: "decir" }, { fr: "aller", es: "ir" }, { fr: "voir", es: "ver" }, { fr: "savoir", es: "saber" }, { fr: "pouvoir", es: "poder" }, { fr: "vouloir", es: "querer" }, { fr: "venir", es: "venir" }, { fr: "prendre", es: "tomar/coger" }, { fr: "croire", es: "creer" }, { fr: "mettre", es: "poner" }, { fr: "parler", es: "hablar" }, { fr: "manger", es: "comer" }, { fr: "donner", es: "dar" }, { fr: "penser", es: "pensar" }, { fr: "passer", es: "pasar" }, { fr: "regarder", es: "mirar" }, { fr: "aimer", es: "amar/querer" }, { fr: "quitter", es: "dejar/abandonar" }, { fr: "trouver", es: "encontrar" }, { fr: "rendre", es: "devolver" }, { fr: "comprendre", es: "entender" }, { fr: "attendre", es: "esperar" }, { fr: "sortir", es: "salir" }, { fr: "vivre", es: "vivir" }, { fr: "entendre", es: "oír" }, { fr: "chercher", es: "buscar" }, { fr: "travailler", es: "trabajar" }, { fr: "appeler", es: "llamar" }, { fr: "tomber", es: "caer" }, { fr: "arriver", es: "llegar" }, { fr: "partir", es: "irse" }, { fr: "connaître", es: "conocer" }, { fr: "devenir", es: "llegar a ser" }, { fr: "demander", es: "pedir/preguntar" }, { fr: "acheter", es: "comprar" }, { fr: "rester", es: "quedarse" }, { fr: "recevoir", es: "recibir" }, { fr: "devoir", es: "deber" }, { fr: "conduire", es: "conducir" }, { fr: "sembler", es: "parecer" }, { fr: "tenir", es: "tener/sujetar" }, { fr: "porter", es: "llevar/portar" }, { fr: "montrer", es: "mostrar" }, { fr: "continuer", es: "continuar" }, { fr: "suivre", es: "seguir" }, { fr: "commencer", es: "empezar" }, { fr: "compter", es: "contar" }, { fr: "remettre", es: "volver a poner" }, { fr: "permettre", es: "permitir" }, { fr: "occuper", es: "ocupar" }, { fr: "décider", es: "decidir" }, { fr: "servir", es: "servir" }, { fr: "revenir", es: "volver" }, { fr: "laisser", es: "dejar" }, { fr: "répondre", es: "responder" }, { fr: "rappeler", es: "recordar" }, { fr: "présenter", es: "presentar" }, { fr: "accepter", es: "aceptar" }, { fr: "agir", es: "actuar" }, { fr: "poser", es: "poner" }, { fr: "jouer", es: "jugar" }, { fr: "reconnaître", es: "reconocer" }, { fr: "choisir", es: "elegir" }, { fr: "toucher", es: "tocar" }, { fr: "retrouver", es: "volver a encontrar" }, { fr: "perdre", es: "perder" }, { fr: "expliquer", es: "explicar" }, { fr: "considérer", es: "considerar" }, { fr: "ouvrir", es: "abrir" }, { fr: "gagner", es: "ganar" }, { fr: "exister", es: "existir" }, { fr: "refuser", es: "rechazar" }, { fr: "lire", es: "leer" }, { fr: "réussir", es: "lograr" }, { fr: "changer", es: "cambiar" }, { fr: "représenter", es: "representar" }, { fr: "assurer", es: "asegurar" }, { fr: "essayer", es: "intentar" }, { fr: "empêcher", es: "impedir" }, { fr: "reprendre", es: "retomar" }, { fr: "mener", es: "dirigir" }, { fr: "appartenir", es: "pertenecer" }];
+
+    let verbStats = JSON.parse(localStorage.getItem('verbStats')) || {};
+    let globalData = JSON.parse(localStorage.getItem('globalData')) || { bestStreak: 0 };
+    let currentStreak = 0, currentVerb = null, mode = 'mcq', isFocusMode = false, isTransitioning = false, initialFocusErrors = 0;
+
+    function checkFocusAvailability() {
+        const errors = Object.values(verbStats).reduce((acc, v) => acc + v.err, 0);
+        const container = document.getElementById('focusZone');
+        if(errors > 0) container.innerHTML = `<button class="btn btn-focus" onclick="startQuiz('type', true)">Reparar mis ${errors} errores 🎯</button>`;
+        else container.innerHTML = "";
+    }
+    checkFocusAvailability();
+
+    function startQuiz(m, focus = false) {
+        mode = m; isFocusMode = focus;
+        document.getElementById('quizBadge').innerText = focus ? "Modo: Reparación 🛠️" : "Modo: Clásico";
+        document.getElementById('progCont').style.display = focus ? "block" : "none";
+        if(focus) initialFocusErrors = Object.values(verbStats).reduce((acc, v) => acc + v.err, 0);
+        switchSection('quiz');
+        nextQuestion();
+    }
+
+    function updateProgressBar() {
+        if(!isFocusMode) return;
+        const currentErrors = Object.values(verbStats).reduce((acc, v) => acc + v.err, 0);
+        const progress = Math.max(0, Math.min(100, ((initialFocusErrors - currentErrors) / initialFocusErrors) * 100));
+        document.getElementById('progBar').style.width = progress + "%";
+    }
+
+    function nextQuestion() {
+        isTransitioning = false;
+        let pool = allVerbs;
+        if (isFocusMode) {
+            pool = allVerbs.filter(v => verbStats[v.fr] && verbStats[v.fr].err > 0);
+            if (pool.length === 0) { alert("¡Puntos débiles corregidos! 🎉"); location.reload(); return; }
+        }
+        currentVerb = pool[Math.floor(Math.random() * pool.length)];
+        document.getElementById('wordToTranslate').innerText = `« ${currentVerb.es.toUpperCase()} »`;
+        document.getElementById('feedback').innerText = "";
+        document.getElementById('streak').innerText = currentStreak;
+        document.getElementById('bestStreak').innerText = globalData.bestStreak;
+        updateProgressBar();
+        if (mode === 'mcq') setupMCQ(); else setupType();
+    }
+
+    function setupMCQ() {
+        document.getElementById('optionsContainer').style.display = "block";
+        document.getElementById('inputContainer').style.display = "none";
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = "";
+        let opts = [currentVerb.fr];
+        while(opts.length < 4) {
+            let rV = allVerbs[Math.floor(Math.random() * allVerbs.length)].fr;
+            if(!opts.includes(rV)) opts.push(rV);
+        }
+        opts.sort(() => 0.5 - Math.random());
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "btn btn-option";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function setupType() {
+        document.getElementById('optionsContainer').style.display = "none";
+        document.getElementById('inputContainer').style.display = "block";
+        const input = document.getElementById('userInput');
+        input.value = ""; input.disabled = false; input.focus();
+        document.getElementById('submitBtn').disabled = false;
+    }
+
+    function checkAnswer(answer, btn = null) {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        const correct = currentVerb.fr.toLowerCase();
+        const userAns = answer.trim().toLowerCase();
+        if(!verbStats[currentVerb.fr]) verbStats[currentVerb.fr] = { ok: 0, err: 0 };
+
+        if (userAns === correct) {
+            currentStreak++;
+            verbStats[currentVerb.fr].ok++;
+            if(isFocusMode && verbStats[currentVerb.fr].err > 0) verbStats[currentVerb.fr].err--;
+            if(currentStreak > globalData.bestStreak) globalData.bestStreak = currentStreak;
+            showFeedback("¡Correcto! 🥳", "var(--success)");
+            if(btn) btn.style.backgroundColor = "var(--success)";
+        } else {
+            currentStreak = 0;
+            verbStats[currentVerb.fr].err++;
+            showFeedback(`${currentVerb.fr} ❌`, "var(--error)");
+            if(btn) btn.style.backgroundColor = "var(--error)";
+            if(mode === 'mcq') {
+                document.querySelectorAll('.btn-option').forEach(b => {
+                    if(b.innerText.toLowerCase() === correct) b.style.backgroundColor = "var(--success)";
+                });
+            }
+        }
+        saveAll();
+        setTimeout(nextQuestion, 1000);
+    }
+
+    function showStats() {
+        const body = document.getElementById('statsBody');
+        body.innerHTML = "";
+        let sorted = Object.keys(verbStats)
+            .map(key => ({ name: key, ...verbStats[key] }))
+            .filter(v => (v.err + v.ok) > 0)
+            .sort((a, b) => b.err - a.err);
+        if(sorted.length === 0) body.innerHTML = "<tr><td colspan='3'>Sin datos aún.</td></tr>";
+        else sorted.forEach(v => {
+            body.innerHTML += `<tr><td>${v.name}</td><td class="error-count">${v.err}</td><td>${v.ok}</td></tr>`;
+        });
+        switchSection('stats');
+    }
+
+    function saveAll() { localStorage.setItem('verbStats', JSON.stringify(verbStats)); localStorage.setItem('globalData', JSON.stringify(globalData)); }
+    function switchSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(id === 'setup') checkFocusAvailability(); }
+    function resetSave() { if(confirm("¿Estás seguro de borrar todo el progreso?")) { localStorage.clear(); location.reload(); } }
+    function checkTypedAnswer() { if(!isTransitioning) checkAnswer(document.getElementById('userInput').value); }
+    function showFeedback(text, color) { const f = document.getElementById('feedback'); f.innerText = text; f.style.color = color; }
+    document.getElementById('userInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkTypedAnswer(); });
+</script>
+<a href="index.html" style="position: fixed; top: 10px; left: 10px; background: #1e293b; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-size: 14px; border: 1px solid #334155; z-index: 1000;">
+    🏠 Accueil
+</a>
+</body>
+</html>

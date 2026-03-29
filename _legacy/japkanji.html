@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanji Master - Full Database</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
+            --accent: #f43f5e; --success: #10b981; --error: #ef4444; --muted: #94a3b8;
+            --n5: #3b82f6; --n4: #10b981; --n3: #f59e0b; --n2: #8b5cf6; --n1: #f43f5e;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px;
+        }
+        .container {
+            background-color: var(--card); padding: 1.2rem; border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center;
+        }
+        .level-bar { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+        .lvl-btn { 
+            padding: 6px 12px; border-radius: 8px; border: 2px solid #334155; 
+            background: transparent; color: white; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.2s;
+        }
+        .lvl-btn.active[data-lvl="N5"] { background: var(--n5); border-color: var(--n5); }
+        .lvl-btn.active[data-lvl="N4"] { background: var(--n4); border-color: var(--n4); }
+        .lvl-btn.active[data-lvl="N3"] { background: var(--n3); border-color: var(--n3); }
+        .lvl-btn.active[data-lvl="N2"] { background: var(--n2); border-color: var(--n2); }
+        .lvl-btn.active[data-lvl="N1"] { background: var(--n1); border-color: var(--n1); }
+
+        .kanji-card { font-size: 5rem; margin: 10px 0; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+        .info-box { color: var(--muted); font-size: 0.85rem; margin-bottom: 15px; height: 3.5rem; display: flex; flex-direction: column; justify-content: center; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .opt {
+            background: #2d3748; border: 1px solid #3e4b5f; color: white; padding: 12px 5px; border-radius: 12px;
+            cursor: pointer; font-size: 0.95rem; transition: 0.1s;
+        }
+        .opt:active { transform: scale(0.95); }
+        
+        #pool-display { color: var(--accent); font-weight: bold; }
+        .stats-area { margin-top: 25px; border-top: 1px solid #334155; padding-top: 10px; text-align: left; }
+        .err-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #2d3748; font-size: 0.8rem; }
+        .badge { font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; margin-left: 5px; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 style="margin: 0 0 10px 0;">🀄 Kanji Master Integral</h2>
+
+        <div class="level-bar" id="lvl-selectors">
+            <button class="lvl-btn active" data-lvl="N5">N5</button>
+            <button class="lvl-btn active" data-lvl="N4">N4</button>
+            <button class="lvl-btn active" data-lvl="N3">N3</button>
+            <button class="lvl-btn" data-lvl="N2">N2</button>
+            <button class="lvl-btn" data-lvl="N1">N1</button>
+        </div>
+
+        <div style="margin-bottom: 12px; font-size: 0.8rem;">
+            <label><input type="radio" name="m" value="k2f" checked> Kanji → FR</label>
+            <label style="margin-left:10px"><input type="radio" name="m" value="f2k"> FR → Kanji</label>
+        </div>
+
+        <div id="game">
+            <div style="display:flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); font-weight: bold;">
+                <span>POOL: <span id="pool-display">0</span></span>
+                <span>STREAK: <span id="streak" style="color:var(--accent)">0</span></span>
+            </div>
+            
+            <div class="kanji-card" id="main-q">...</div>
+            <div class="info-box" id="extra-q"></div>
+            <div id="msg" style="height: 1.2rem; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem;"></div>
+
+            <div class="grid" id="opts"></div>
+        </div>
+
+        <div class="stats-area">
+            <div id="stats-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // BASE DE DONNÉES INTEGRALE N5-N3
+        const rawDB = [
+            // --- N5 COMPLET (103 KANJIS) ---
+            {k:"一",fr:"Un",on:"ICHI",kun:"hito",l:"N5"},{k:"二",fr:"Deux",on:"NI",kun:"futa",l:"N5"},{k:"三",fr:"Trois",on:"SAN",kun:"mit",l:"N5"},{k:"四",fr:"Quatre",on:"SHI",kun:"yon",l:"N5"},{k:"五",fr:"Cinq",on:"GO",kun:"itsu",l:"N5"},{k:"六",fr:"Six",on:"ROKU",kun:"mut",l:"N5"},{k:"七",fr:"Sept",on:"SHICHI",kun:"nana",l:"N5"},{k:"八",fr:"Huit",on:"HACHI",kun:"yat",l:"N5"},{k:"九",fr:"Neuf",on:"KYUU",kun:"kokono",l:"N5"},{k:"十",fr:"Dix",on:"JUU",kun:"too",l:"N5"},
+            {k:"百",fr:"Cent",on:"HYAKU",kun:"-",l:"N5"},{k:"千",fr:"Mille",on:"SEN",kun:"chi",l:"N5"},{k:"万",fr:"10 000",on:"MAN",kun:"-",l:"N5"},{k:"円",fr:"Yen / Cercle",on:"EN",kun:"maru",l:"N5"},{k:"口",fr:"Bouche",on:"KOU",kun:"kuchi",l:"N5"},{k:"目",fr:"Œil",on:"MOKU",kun:"me",l:"N5"},{k:"耳",fr:"Oreille",on:"JI",kun:"mimi",l:"N5"},{k:"手",fr:"Main",on:"SHU",kun:"te",l:"N5"},{k:"足",fr:"Pied / Jambe",on:"SOKU",kun:"ashi",l:"N5"},{k:"力",fr:"Force",on:"RYOKU",kun:"chikara",l:"N5"},
+            {k:"人",fr:"Personne",on:"JIN/NIN",kun:"hito",l:"N5"},{k:"子",fr:"Enfant",on:"SHI",kun:"ko",l:"N5"},{k:"女",fr:"Femme",on:"JO",kun:"onna",l:"N5"},{k:"男",fr:"Homme",on:"DAN",kun:"otoko",l:"N5"},{k:"父",fr:"Père",on:"FU",kun:"chichi",l:"N5"},{k:"母",fr:"Mère",on:"BO",kun:"haha",l:"N5"},{k:"先",fr:"Précédent",on:"SEN",kun:"saki",l:"N5"},{k:"生",fr:"Vie / Naître",on:"SEI",kun:"u/iki",l:"N5"},{k:"学",fr:"Étude",on:"GAKU",kun:"mana",l:"N5"},{k:"校",fr:"École",on:"KOU",kun:"-",l:"N5"},
+            {k:"友",fr:"Ami",on:"YUU",kun:"tomo",l:"N5"},{k:"本",fr:"Livre / Origine",on:"HON",kun:"moto",l:"N5"},{k:"日",fr:"Jour / Soleil",on:"NICHI",kun:"hi",l:"N5"},{k:"月",fr:"Lune / Mois",on:"GETSU",kun:"tsuki",l:"N5"},{k:"火",fr:"Feu",on:"KA",kun:"hi",l:"N5"},{k:"水",fr:"Eau",on:"SUI",kun:"mizu",l:"N5"},{k:"木",fr:"Bois / Arbre",on:"MOKU",kun:"ki",l:"N5"},{k:"金",fr:"Or / Argent",on:"KIN",kun:"kane",l:"N5"},{k:"土",fr:"Terre",on:"DO",kun:"tsuchi",l:"N5"},{k:"山",fr:"Montagne",on:"SAN",kun:"yama",l:"N5"},
+            {k:"川",fr:"Rivière",on:"SEN",kun:"kawa",l:"N5"},{k:"田",fr:"Rizière",on:"DEN",kun:"ta",l:"N5"},{k:"白",fr:"Blanc",on:"HAKU",kun:"shiro",l:"N5"},{k:"赤",fr:"Rouge",on:"SEKI",kun:"aka",l:"N5"},{k:"青",fr:"Bleu",on:"SEI",kun:"ao",l:"N5"},{k:"黒",fr:"Noir",on:"KOKU",kun:"kuro",l:"N5"},{k:"上",fr:"Haut",on:"JOU",kun:"ue/a",l:"N5"},{k:"下",fr:"Bas",on:"KA/GE",kun:"shita/sada",l:"N5"},{k:"左",fr:"Gauche",on:"SA",kun:"hidari",l:"N5"},{k:"右",fr:"Droite",on:"UU/YUU",kun:"migi",l:"N5"},
+            {k:"中",fr:"Milieu / Intérieur",on:"CHUU",kun:"naka",l:"N5"},{k:"大",fr:"Grand",on:"DAI",kun:"oo",l:"N5"},{k:"小",fr:"Petit",on:"SHOU",kun:"chii/ko",l:"N5"},{k:"長",fr:"Long / Chef",on:"CHOU",kun:"naga",l:"N5"},{k:"多",fr:"Beaucoup",on:"TA",kun:"oo",l:"N5"},{k:"少",fr:"Peu",on:"SHOU",kun:"suku/suko",l:"N5"},{k:"正",fr:"Correct",on:"SEI",kun:"tada",l:"N5"},{k:"古",fr:"Vieux",on:"KO",kun:"furu",l:"N5"},{k:"新",fr:"Nouveau",on:"SHIN",kun:"atara",l:"N5"},{k:"早",fr:"Tôt",on:"SOU",kun:"haya",l:"N5"},
+            {k:"見",fr:"Voir",on:"KEN",kun:"mi",l:"N5"},{k:"行",fr:"Aller",on:"KOU",kun:"i/yuku",l:"N5"},{k:"来",fr:"Venir",on:"RAI",kun:"ku/ki",l:"N5"},{k:"出",fr:"Sortir",on:"SHUTSU",kun:"de/da",l:"N5"},{k:"入",fr:"Entrer",on:"NYUU",kun:"hai/i",l:"N5"},{k:"食",fr:"Manger",on:"SHOKU",kun:"ta",l:"N5"},{k:"飲",fr:"Boire",on:"IN",kun:"no",l:"N5"},{k:"書",fr:"Écrire",on:"SHO",kun:"ka",l:"N5"},{k:"読",fr:"Lire",on:"DOKU",kun:"yo",l:"N5"},{k:"聞",fr:"Entendre/Écouter",on:"BUN",kun:"ki",l:"N5"},
+            {k:"話",fr:"Parler",on:"WA",kun:"hana/hanashi",l:"N5"},{k:"買",fr:"Acheter",on:"BAI",kun:"ka",l:"N5"},{k:"立",fr:"Se tenir debout",on:"RITSU",kun:"ta",l:"N5"},{k:"休",fr:"Se reposer",on:"KYUU",kun:"yasu",l:"N5"},{k:"時",fr:"Heure / Temps",on:"JI",kun:"toki",l:"N5"},{k:"週",fr:"Semaine",on:"SHUU",kun:"-",l:"N5"},{k:"年",fr:"Année",on:"NEN",kun:"toshi",l:"N5"},{k:"今",fr:"Maintenant",on:"KON",kun:"ima",l:"N5"},{k:"間",fr:"Intervalle",on:"KAN",kun:"aida/ma",l:"N5"},{k:"半",fr:"Moitié",on:"HAN",kun:"naka",l:"N5"},
+            {k:"午",fr:"Midi",on:"GO",kun:"-",l:"N5"},{k:"前",fr:"Avant / Devant",on:"ZEN",kun:"mae",l:"N5"},{k:"後",fr:"Après / Derrière",on:"GO/KOU",kun:"ato/ushi",l:"N5"},{k:"東",fr:"Est",on:"TOU",kun:"higashi",l:"N5"},{k:"西",fr:"Ouest",on:"SAI/ZAI",kun:"nishi",l:"N5"},{k:"南",fr:"Sud",on:"NAN",kun:"minami",l:"N5"},{k:"北",fr:"Nord",on:"HOKU",kun:"kita",l:"N5"},{k:"高",fr:"Haut / Cher",on:"KOU",kun:"taka",l:"N5"},{k:"安",fr:"Repos / Bon marché",on:"AN",kun:"yasu",l:"N5"},{k:"名",fr:"Nom",on:"MEI/MYOU",kun:"na",l:"N5"},
+            {k:"語",fr:"Langue / Mot",on:"GO",kun:"kata",l:"N5"},{k:"何",fr:"Quoi",on:"KA",kun:"nani/nan",l:"N5"},{k:"気",fr:"Esprit / Air",on:"KI/KE",kun:"-",l:"N5"},{k:"天",fr:"Ciel",on:"TEN",kun:"ama",l:"N5"},{k:"雨",fr:"Pluie",on:"U",kun:"ame",l:"N5"},{k:"電",fr:"Électricité",on:"DEN",kun:"-",l:"N5"},{k:"車",fr:"Voiture",on:"SHA",kun:"kuruma",l:"N5"},{k:"門",fr:"Portail",on:"MON",kun:"kado",l:"N5"},{k:"道",fr:"Chemin",on:"DOU",kun:"michi",l:"N5"},{k:"社",fr:"Société / Sanctuaire",on:"SHA",kun:"yashiro",l:"N5"},
+            {k:"国",fr:"Pays",on:"KOKU",kun:"kuni",l:"N5"},{k:"外",fr:"Extérieur",on:"GAI",kun:"soto",l:"N5"},{k:"駅",fr:"Gare",on:"EKI",kun:"-",l:"N5"},
+			
+            // --- N4 COMPLET (~170 KANJIS) ---
+            {k:"不",fr:"Négatif/In-",on:"FU",kun:"-",l:"N4"},{k:"世",fr:"Monde/Génération",on:"SEI/SE",kun:"yo",l:"N4"},{k:"主",fr:"Maître/Principal",on:"SHU",kun:"nushi/omo",l:"N4"},{k:"乗",fr:"Monter (véhicule)",on:"JOU",kun:"no",l:"N4"},{k:"事",fr:"Chose/Fait",on:"JI",kun:"koto",l:"N4"},{k:"京",fr:"Capitale",on:"KYOU",kun:"-",l:"N4"},{k:"仕",fr:"Servir",on:"SHI",kun:"tsuka",l:"N4"},{k:"代",fr:"Remplacer/Génération",on:"DAI",kun:"ka",l:"N4"},{k:"以",fr:"Au moyen de",on:"I",kun:"-",l:"N4"},{k:"低",fr:"Bas",on:"TEI",kun:"hiku",l:"N4"},
+            {k:"体",fr:"Corps",on:"TAI",kun:"karada",l:"N4"},{k:"作",fr:"Fabriquer",on:"SAKU",kun:"tsuku",l:"N4"},{k:"使",fr:"Utiliser",on:"SHI",kun:"tsuka",l:"N4"},{k:"便",fr:"Pratique/Courrier",on:"BEN/BIN",kun:"tayo",l:"N4"},{k:"借",fr:"Emprunter",on:"SHAKU",kun:"ka",l:"N4"},{k:"元",fr:"Origine",on:"GEN/GAN",kun:"moto",l:"N4"},{k:"光",fr:"Lumière",on:"KOU",kun:"hikari",l:"N4"},{k:"写",fr:"Copier/Photo",on:"SHA",kun:"utsu",l:"N4"},{k:"冬",fr:"Hiver",on:"TOU",kun:"fuyu",l:"N4"},{k:"切",fr:"Couper",on:"SETSU",kun:"ki",l:"N4"},
+            {k:"別",fr:"Séparer",on:"BETSU",kun:"wa",l:"N4"},{k:"力",fr:"Force",on:"RYOKU",kun:"chikara",l:"N4"},{k:"勉",fr:"Effort",on:"BEN",kun:"tsuto",l:"N4"},{k:"動",fr:"Bouger",on:"DOU",kun:"ugo",l:"N4"},{k:"医",fr:"Médecine",on:"I",kun:"-",l:"N4"},{k:"去",fr:"Passé/Quitter",on:"KYO",kun:"sa",l:"N4"},{k:"台",fr:"Support/Plateau",on:"DAI/TAI",kun:"-",l:"N4"},{k:"合",fr:"S'unir/Convenir",on:"GOU",kun:"a",l:"N4"},{k:"同",fr:"Même",on:"DOU",kun:"ona",l:"N4"},{k:"味",fr:"Goût",on:"MI",kun:"aji",l:"N4"},
+            {k:"品",fr:"Article/Produit",on:"HIN",kun:"shina",l:"N4"},{k:"員",fr:"Membre",on:"IN",kun:"-",l:"N4"},{k:"問",fr:"Question",on:"MON",kun:"to",l:"N4"},{k:"図",fr:"Dessin/Plan",on:"ZU/TO",kun:"haka",l:"N4"},{k:"地",fr:"Terre/Sol",on:"CHI/JI",kun:"-",l:"N4"},{k:"堂",fr:"Hall/Temple",on:"DOU",kun:"-",l:"N4"},{k:"場",fr:"Lieu",on:"JOU",kun:"ba",l:"N4"},{k:"声",fr:"Voix",on:"SEI",kun:"koe",l:"N4"},{k:"売",fr:"Vendre",on:"BAI",kun:"u",l:"N4"},{k:"夏",fr:"Été",on:"KA",kun:"natsu",l:"N4"},
+            {k:"夕",fr:"Soirée",on:"SEKI",kun:"yuu",l:"N4"},{k:"夜",fr:"Nuit",on:"YA",kun:"yoru/yo",l:"N4"},{k:"太",fr:"Gros",on:"TA",kun:"futo",l:"N4"},{k:"好",fr:"Aimer",on:"KOU",kun:"su/kono",l:"N4"},{k:"妹",fr:"Petite sœur",on:"MAI",kun:"imouto",l:"N4"},{k:"姉",fr:"Grande sœur",on:"SHI",kun:"ane",l:"N4"},{k:"始",fr:"Commencer",on:"SHI",kun:"haji",l:"N4"},{k:"字",fr:"Caractère",on:"JI",kun:"aza",l:"N4"},{k:"学",fr:"Étude",on:"GAKU",kun:"mana",l:"N4"},{k:"宅",fr:"Maison/Chez-soi",on:"TAKU",kun:"-",l:"N4"},
+            {k:"安",fr:"Bon marché/Paix",on:"AN",kun:"yasu",l:"N4"},{k:"室",fr:"Pièce/Chambre",on:"SHITSU",kun:"muro",l:"N4"},{k:"家",fr:"Maison",on:"KA",kun:"ie/ya",l:"N4"},{k:"寒",fr:"Froid",on:"KAN",kun:"samu",l:"N4"},{k:"屋",fr:"Toit/Magasin",on:"OKU",kun:"ya",l:"N4"},{k:"工",fr:"Construction/Art",on:"KOU/KU",kun:"-",l:"N4"},{k:"市",fr:"Ville/Marché",on:"SHI",kun:"ichi",l:"N4"},{k:"帰",fr:"Rentrer",on:"KI",kun:"kae",l:"N4"},{k:"広",fr:"Large",on:"KOU",kun:"hiro",l:"N4"},{k:"店",fr:"Magasin",on:"TEN",kun:"mise",l:"N4"},
+            {k:"度",fr:"Degré/Fois",on:"DO",kun:"tabi",l:"N4"},{k:"建",fr:"Construire",on:"KEN",kun:"ta",l:"N4"},{k:"弟",fr:"Petit frère",on:"TEI/DAI",kun:"otouto",l:"N4"},{k:"強",fr:"Fort",on:"KYOU",kun:"tsuyo",l:"N4"},{k:"待",fr:"Attendre",on:"TAI",kun:"ma",l:"N4"},{k:"心",fr:"Cœur/Esprit",on:"SHIN",kun:"kokoro",l:"N4"},{k:"思",fr:"Penser",on:"SHI",kun:"omo",l:"N4"},{k:"急",fr:"Soudain/Vite",on:"KYUU",kun:"iso",l:"N4"},{k:"悪",fr:"Mauvais",on:"AKU",kun:"waru",l:"N4"},{k:"意",fr:"Intention/Sens",on:"I",kun:"-",l:"N4"},
+            {k:"所",fr:"Lieu",on:"SHO",kun:"tokoro",l:"N4"},{k:"持",fr:"Tenir/Avoir",on:"JI",kun:"mo",l:"N4"},{k:"教",fr:"Enseigner",on:"KYOU",kun:"oshi",l:"N4"},{k:"文",fr:"Littérature/Phrase",on:"BUN/MON",kun:"fumi",l:"N4"},{k:"料",fr:"Frais/Ingrédient",on:"RYOU",kun:"-",l:"N4"},{k:"旅",fr:"Voyage",on:"RYO",kun:"tabi",l:"N4"},{k:"族",fr:"Famille/Tribu",on:"ZOKU",kun:"-",l:"N4"},{k:"曜",fr:"Jour de semaine",on:"YOU",kun:"-",l:"N4"},{k:"有",fr:"Exister/Avoir",on:"YUU/U",kun:"a",l:"N4"},{k:"服",fr:"Vêtement",on:"FUKU",kun:"-",l:"N4"},
+            {k:"朝",fr:"Matin",on:"CHOU",kun:"asa",l:"N4"},{k:"業",fr:"Affaires/Industrie",on:"GYOU",kun:"waza",l:"N4"},{k:"楽",fr:"Musique/Confort",on:"RAKU/GAKU",kun:"tano",l:"N4"},{k:"歌",fr:"Chanson",on:"KA",kun:"uta",l:"N4"},{k:"止",fr:"S'arrêter",on:"SHI",kun:"to",l:"N4"},{k:"正",fr:"Correct",on:"SEI/SHOU",kun:"tada",l:"N4"},{k:"歩",fr:"Marcher",on:"HO",kun:"aru/ayu",l:"N4"},{k:"死",fr:"Mort",on:"SHI",kun:"shi",l:"N4"},{k:"注",fr:"Verser/Attention",on:"CHUU",kun:"sotsu",l:"N4"},{k:"洋",fr:"Océan/Occident",on:"YOU",kun:"-",l:"N4"},
+            {k:"洗",fr:"Laver",on:"SEN",kun:"ara",l:"N4"},{k:"海",fr:"Mer",on:"KAI",kun:"umi",l:"N4"},{k:"漢",fr:"Chine/Kan",on:"KAN",kun:"-",l:"N4"},{k:"牛",fr:"Vache/Bœuf",on:"GYUU",kun:"ushi",l:"N4"},{k:"物",fr:"Chose/Objet",on:"BUTSU/MOTSU",kun:"mono",l:"N4"},{k:"特",fr:"Spécial",on:"TOKU",kun:"-",l:"N4"},{k:"犬",fr:"Chien",on:"KEN",kun:"inu",l:"N4"},{k:"理",fr:"Raison/Logique",on:"RI",kun:"-",l:"N4"},{k:"用",fr:"Utiliser/Affaire",on:"YOU",kun:"mochi",l:"N4"},{k:"界",fr:"Monde",on:"KAI",kun:"-",l:"N4"},
+            {k:"病",fr:"Maladie",on:"BYOU",kun:"yama",l:"N4"},{k:"発",fr:"Départ/Émettre",on:"HATSU",kun:"-",l:"N4"},{k:"知",fr:"Savoir",on:"CHI",kun:"shi",l:"N4"},{k:"研",fr:"Recherche/Aiguiser",on:"KEN",kun:"to",l:"N4"},{k:"究",fr:"Investiguer",on:"KYUU",kun:"kiwa",l:"N4"},{k:"空",fr:"Ciel/Vide",on:"KUU",kun:"sora/aki",l:"N4"},{k:"答",fr:"Réponse",on:"TOU",kun:"kota",l:"N4"},{k:"終",fr:"Fin",on:"SHUU",kun:"o",l:"N4"},{k:"習",fr:"Apprendre",on:"SHUU",kun:"nara",l:"N4"},{k:"考",fr:"Penser",on:"KOU",kun:"kanga",l:"N4"},
+            {k:"者",fr:"Quelqu'un",on:"SHA",kun:"mono",l:"N4"},{k:"肉",fr:"Viande",on:"NIKU",kun:"-",l:"N4"},{k:"自",fr:"Soi-même",on:"JI/SHI",kun:"mizu",l:"N4"},{k:"色",fr:"Couleur",on:"SHOKU",kun:"iro",l:"N4"},{k:"茶",fr:"Thé",on:"CHA/SA",kun:"-",l:"N4"},{k:"荷",fr:"Bagage/Charge",on:"KA",kun:"ni",l:"N4"},{k:"菜",fr:"Légume",on:"SAI",kun:"na",l:"N4"},{k:"親",fr:"Parent/Proche",on:"SHIN",kun:"oya/shita",l:"N4"},{k:"試",fr:"Essayer/Test",on:"SHI",kun:"kokoro/tame",l:"N4"},{k:"験",fr:"Vérifier/Test",on:"KEN",kun:"-",l:"N4"},
+            {k:"貸",fr:"Prêter",on:"TAI",kun:"ka",l:"N4"},{k:"質",fr:"Qualité/Question",on:"SHITSU",kun:"-",l:"N4"},{k:"赤",fr:"Rouge",on:"SEKI",kun:"aka",l:"N4"},{k:"走",fr:"Courir",on:"SOU",kun:"hashi",l:"N4"},{k:"足",fr:"Pied/Suffire",on:"SOKU",kun:"ashi/ta",l:"N4"},{k:"転",fr:"Rouler/Tourner",on:"TEN",kun:"koro",l:"N4"},{k:"近",fr:"Proche",on:"KIN",kun:"chika",l:"N4"},{k:"送",fr:"Envoyer",on:"SOU",kun:"oku",l:"N4"},{k:"通",fr:"Passer/Traverser",on:"TSUU",kun:"tou/kayo",l:"N4"},{k:"運",fr:"Transporter/Chance",on:"UN",kun:"hako",l:"N4"},
+            {k:"道",fr:"Chemin/Voie",on:"DOU",kun:"michi",l:"N4"},{k:"遠",fr:"Loin",on:"EN",kun:"too",l:"N4"},{k:"都",fr:"Métropole",on:"TO/TSU",kun:"miyako",l:"N4"},{k:"重",fr:"Lourd/Série",on:"JUU/CHOU",kun:"omo/kasa",l:"N4"},{k:"野",fr:"Plaine/Champ",on:"YA",kun:"no",l:"N4"},{k:"銀",fr:"Argent (métal)",on:"GIN",kun:"-",l:"N4"},{k:"開",fr:"Ouvrir",on:"KAI",kun:"a/hira",l:"N4"},{k:"院",fr:"Institution",on:"IN",kun:"-",l:"N4"},{k:"降",fr:"Descendre/Pleuvoir",on:"KOU",kun:"fu/o",l:"N4"},{k:"集",fr:"Rassembler",on:"SHUU",kun:"atsu",l:"N4"},
+            {k:"青",fr:"Bleu",on:"SEI",kun:"ao",l:"N4"},{k:"音",fr:"Son",on:"ON",kun:"oto/ne",l:"N4"},{k:"題",fr:"Sujet/Titre",on:"DAI",kun:"-",l:"N4"},{k:"風",fr:"Vent/Style",on:"FUU",kun:"kaze",l:"N4"},{k:"飯",fr:"Repas/Riz cuit",on:"HAN",kun:"meshi",l:"N4"},{k:"飲",fr:"Boire",on:"IN",kun:"no",l:"N4"},{k:"館",fr:"Édifice",on:"KAN",kun:"-",l:"N4"},{k:"首",fr:"Cou/Chef",on:"SHU",kun:"kubi",l:"N4"},{k:"験",fr:"Examen",on:"KEN",kun:"-",l:"N4"},
+			
+           // --- N3 COMPLET ---
+            {k:"予",fr:"À l'avance",on:"YO",kun:"arakaji",l:"N3"},{k:"定",fr:"Fixer/Décider",on:"TEI/JOU",kun:"sada",l:"N3"},{k:"用",fr:"Utilisation/Affaire",on:"YOU",kun:"mochi",l:"N3"},{k:"事",fr:"Chose/Fait",on:"JI",kun:"koto",l:"N3"},{k:"成",fr:"Devenir/Réussir",on:"SEI",kun:"na",l:"N3"},{k:"戦",fr:"Guerre/Combat",on:"SEN",kun:"tataka/iku",l:"N3"},{k:"最",fr:"Le plus",on:"SAI",kun:"mo",l:"N3"},{k:"相",fr:"Aspect/Mutuel",on:"SOU/SHOU",kun:"ai",l:"N3"},{k:"法",fr:"Loi/Méthode",on:"HOU",kun:"-",l:"N3"},{k:"的",fr:"Cible/Suffixe -ique",on:"TEKI",kun:"mato",l:"N3"},
+            {k:"要",fr:"Nécessaire",on:"YOU",kun:"i",l:"N3"},{k:"制",fr:"Système/Contrôle",on:"SEI",kun:"-",l:"N3"},{k:"治",fr:"Gouverner/Guérir",on:"JI/CHI",kun:"osa/nao",l:"N3"},{k:"選",fr:"Choisir",on:"SEN",kun:"era",l:"N3"},{k:"和",fr:"Paix/Harmonie",on:"WA",kun:"yawa",l:"N3"},{k:"機",fr:"Machine/Occasion",on:"KI",kun:"hata",l:"N3"},{k:"加",fr:"Ajouter",on:"KA",kun:"kuwa",l:"N3"},{k:"受",fr:"Recevoir",on:"JU",kun:"u",l:"N3"},{k:"続",fr:"Continuer",on:"ZOKU",kun:"tsudu",l:"N3"},{k:"進",fr:"Avancer",on:"SHIN",kun:"susu",l:"N3"},
+            {k:"数",fr:"Nombre",on:"SUU",kun:"kazu/kazo",l:"N3"},{k:"記",fr:"Noter/Écrire",on:"KI",kun:"shiru",l:"N3"},{k:"初",fr:"Début/Premier",on:"SHO",kun:"haji/u",l:"N3"},{k:"指",fr:"Doigt/Désigner",on:"SHI",kun:"yubi/sa",l:"N3"},{k:"権",fr:"Droit/Pouvoir",on:"KEN",kun:"-",l:"N3"},{k:"支",fr:"Soutenir",on:"SHI",kun:"sasa",l:"N3"},{k:"产",fr:"Produire/Naître",on:"SAN",kun:"u",l:"N3"},{k:"点",fr:"Point",on:"TEN",kun:"tsu",l:"N3"},{k:"報",fr:"Informer",on:"HOU",kun:"muku",l:"N3"},{k:"済",fr:"Terminer/Régler",on:"SAI",kun:"su",l:"N3"},
+            {k:"活",fr:"Vie/Activité",on:"KATSU",kun:"-",l:"N3"},{k:"原",fr:"Plaine/Origine",on:"GEN",kun:"hara",l:"N3"},{k:"共",fr:"Ensemble",on:"KYOU",kun:"tomo",l:"N3"},{k:"得",fr:"Obtenir/Gain",on:"TOKU",kun:"e",l:"N3"},{k:"解",fr:"Dénouer/Solution",on:"KAI/GE",kun:"to",l:"N3"},{k:"交",fr:"Mélanger/Échanger",on:"KOU",kun:"ma/ka",l:"N3"},{k:"資",fr:"Ressources/Capital",on:"SHI",kun:"-",l:"N3"},{k:"向",fr:"S'orienter",on:"KOU",kun:"mu",l:"N3"},{k:"際",fr:"Occasion/Bord",on:"SAI",kun:"kiwa",l:"N3"},{k:"勝",fr:"Gagner",on:"SHOU",kun:"ka",l:"N3"},
+            {k:"面",fr:"Face/Surface",on:"MEN",kun:"omote/tsura",l:"N3"},{k:"委",fr:"Confier",on:"I",kun:"yuda",l:"N3"},{k:"告",fr:"Annoncer",on:"KOKU",kun:"tsu",l:"N3"},{k:"反",fr:"S'opposer",on:"HAN/TAN",kun:"so",l:"N3"},{k:"判",fr:"Juger",on:"HAN/BAN",kun:"-",l:"N3"},{k:"認",fr:"Reconnaître",on:"NIN",kun:"mito",l:"N3"},{k:"参",fr:"Participer/Aller",on:"SAN",kun:"mai",l:"N3"},{k:"利",fr:"Profit/Utile",on:"RI",kun:"ki",l:"N3"},{k:"組",fr:"Association/Groupe",on:"SO",kun:"kumi",l:"N3"},{k:"信",fr:"Confiance/Croire",on:"SHIN",kun:"-",l:"N3"},
+            {k:"在",fr:"Exister/Situé",on:"ZAI",kun:"a",l:"N3"},{k:"件",fr:"Affaire/Cas",on:"KEN",kun:"-",l:"N3"},{k:"側",fr:"Côté",on:"SOKU",kun:"gawa",l:"N3"},{k:"任",fr:"Responsabilité",on:"NIN",kun:"maka",l:"N3"},{k:"引",fr:"Tirer",on:"IN",kun:"hi",l:"N3"},{k:"求",fr:"Chercher/Demander",on:"KYUU",kun:"moto",l:"N3"},{k:"所",fr:"Endroit",on:"SHO",kun:"tokoro",l:"N3"},{k:"次",fr:"Suivant",on:"JI",kun:"tsugi",l:"N3"},{k:"昨",fr:"Hier",on:"SAKU",kun:"-",l:"N3"},{k:"論",fr:"Théorie/Débat",on:"RON",kun:"-",l:"N3"},
+            {k:"官",fr:"Officier/Gouvernement",on:"KAN",kun:"-",l:"N3"},{k:"増",fr:"Augmenter",on:"ZOU",kun:"fu/ma",l:"N3"},{k:"係",fr:"Rapport/Lien",on:"KEI",kun:"kaka",l:"N3"},{k:"感",fr:"Sentiment",on:"KAN",kun:"-",l:"N3"},{k:"情",fr:"Émotion",on:"JOU",kun:"nasa",l:"N3"},{k:"投",fr:"Lancer",on:"TOU",kun:"na",l:"N3"},{k:"示",fr:"Montrer",on:"JI/SHI",kun:"shime",l:"N3"},{k:"変",fr:"Changer/Étrange",on:"HEN",kun:"ka",l:"N3"},{k:"打",fr:"Frapper",on:"DA",kun:"u",l:"N3"},{k:"直",fr:"Réparer/Direct",on:"CHOKU/JIKI",kun:"nao/tada",l:"N3"},
+            {k:"両",fr:"Les deux",on:"RYOU",kun:"-",l:"N3"},{k:"式",fr:"Cérémonie/Style",on:"SHIKI",kun:"-",l:"N3"},{k:"確",fr:"Certain",on:"KAKU",kun:"tashi",l:"N3"},{k:"果",fr:"Fruit/Résultat",on:"KA",kun:"ha",l:"N3"},{k:"容",fr:"Contenu",on:"YOU",kun:"katachi",l:"N3"},{k:"必",fr:"Inévitablement",on:"HITSU",kun:"kanara",l:"N3"},{k:"演",fr:"Jouer/Pratiquer",on:"EN",kun:"-",l:"N3"},{k:"歳",fr:"Âge",on:"SAI/ZEI",kun:"-",l:"N3"},{k:"争",fr:"Dispute",on:"SOU",kun:"ara",l:"N3"},{k:"談",fr:"Discuter",on:"DAN",kun:"-",l:"N3"},
+            {k:"能",fr:"Capacité",on:"NOU",kun:"-",l:"N3"},{k:"位",fr:"Rang/Position",on:"I",kun:"kurai",l:"N3"},{k:"置",fr:"Poser/Placer",on:"CHI",kun:"o",l:"N3"},{k:"流",fr:"Courant",on:"RYUU/RU",kun:"naga",l:"N3"},{k:"格",fr:"Statut/Règle",on:"KAKU/KOU",kun:"-",l:"N3"},{k:"疑",fr:"Douter",on:"GI",kun:"utaga",l:"N3"},{k:"過",fr:"Passer/Excès",on:"KA",kun:"su/ayama",l:"N3"},{k:"局",fr:"Bureau",on:"KYOKU",kun:"-",l:"N3"},{k:"放",fr:"Libérer",on:"HOU",kun:"hana",l:"N3"},{k:"常",fr:"Habituel",on:"JOU",kun:"tsune",l:"N3"},
+            {k:"状",fr:"État/Condition",on:"JOU",kun:"-",l:"N3"},{k:"球",fr:"Balle/Globe",on:"KYUU",kun:"tama",l:"N3"},{k:"職",fr:"Emploi",on:"SHOKU",kun:"-",l:"N3"},{k:"与",fr:"Donner",on:"YO",kun:"ata",l:"N3"},{k:"供",fr:"Fournir/Offrir",on:"KYOU/KU",kun:"tomo/sona",l:"N3"},{k:"役",fr:"Rôle/Service",on:"YAKU/E",kun:"-",l:"N3"},{k:"構",fr:"Structure",on:"KOU",kun:"kama",l:"N3"},{k:"割",fr:"Diviser",on:"KATSU",kun:"wa",l:"N3"},{k:"身",fr:"Corps/Soi",on:"SHIN",kun:"mi",l:"N3"},{k:"費",fr:"Dépense",on:"HI",kun:"tui",l:"N3"},
+            {k:"付",fr:"Attacher",on:"FU",kun:"tsu",l:"N3"},{k:"由",fr:"Raison",on:"YUU/YU",kun:"yoshi",l:"N3"},{k:"説",fr:"Théorie/Expliquer",on:"SETSU",kun:"to",l:"N3"},{k:"難",fr:"Difficile",on:"NAN",kun:"muzuka",l:"N3"},{k:"優",fr:"Excellent/Gentil",on:"YUU",kun:"yasa/suga",l:"N3"},{k:"夫",fr:"Mari",on:"FU/FUU",kun:"otto",l:"N3"},{k:"収",fr:"Récolte/Obtenir",on:"SHUU",kun:"osa",l:"N3"},{k:"断",fr:"Trancher/Refuser",on:"DAN",kun:"ta/kotowa",l:"N3"},{k:"石",fr:"Pierre",on:"SEKI/SHAKU",kun:"ishi",l:"N3"},{k:"違",fr:"Différer/Erreur",on:"I",kun:"tiga",l:"N3"},
+            {k:"消",fr:"Éteindre/Effacer",on:"SHOU",kun:"ke/ki",l:"N3"},{k:"神",fr:"Dieu",on:"SHIN/JIN",kun:"kami",l:"N3"},{k:"番",fr:"Numéro/Tour",on:"BAN",kun:"-",l:"N3"},{k:"規",fr:"Règle/Mesure",on:"KI",kun:"-",l:"N3"},{k:"术",fr:"Art/Technique",on:"JUTSU",kun:"sube",l:"N3"},{k:"備",fr:"Équiper",on:"BI",kun:"sona",l:"N3"},{k:"宅",fr:"Maison",on:"TAKU",kun:"-",l:"N3"},{k:"害",fr:"Dommage",on:"GAI",kun:"-",l:"N3"},{k:"配",fr:"Distribuer",on:"HAI",kun:"kuba",l:"N3"},{k:"警",fr:"Avertir/Police",on:"KEI",kun:"-",l:"N3"},
+            {k:"育",fr:"Élever/Grandir",on:"IKU",kun:"soda",l:"N3"},{k:"席",fr:"Siège",on:"SEKI",kun:"-",l:"N3"},{k:"訪",fr:"Visiter",on:"HOU",kun:"tazu/otozu",l:"N3"},{k:"乗",fr:"Monter",on:"JOU",kun:"no",l:"N3"},{k:"残",fr:"Rester",on:"ZAN",kun:"noko",l:"N3"},{k:"想",fr:"Pensée/Idée",on:"SOU/SO",kun:"omo",l:"N3"},{k:"声",fr:"Voix",on:"SEI",kun:"koe",l:"N3"},{k:"念",fr:"Pensée/Désir",on:"NEN",kun:"-",l:"N3"},{k:"助",fr:"Aider",on:"JO",kun:"tasu",l:"N3"},{k:"絶",fr:"Absolument",on:"ZETSU",kun:"ta",l:"N3"},
+            {k:"対",fr:"Opposé",on:"TAI",kun:"-",l:"N3"},{k:"飛",fr:"Voler (air)",on:"HI",kun:"to",l:"N3"},{k:"負",fr:"Perdre",on:"FU",kun:"ma",l:"N3"},{k:"美",fr:"Beau",on:"BI",kun:"utsuku",l:"N3"},{k:"笑",fr:"Rire",on:"SHOU",kun:"wara",l:"N3"},{k:"辞",fr:"Mot/Démission",on:"JI",kun:"ya",l:"N3"},{k:"殺",fr:"Tuer",on:"SATSU",kun:"koro",l:"N3"},{k:"怒",fr:"Colère",on:"DO",kun:"oko",l:"N3"},{k:"怖",fr:"Peur",on:"FU",kun:"kowa",l:"N3"},{k:"恥",fr:"Honte",on:"CHI",kun:"ha",l:"N3"},
+            {k:"落",fr:"Tomber",on:"RAKU",kun:"o",l:"N3"},{k:"失",fr:"Perdre",on:"SHITSU",kun:"ushina",l:"N3"},{k:"等",fr:"Égal/Etc",on:"TOU",kun:"nado",l:"N3"},{k:"深",fr:"Profond",on:"SHIN",kun:"fuka",l:"N3"},{k:"若",fr:"Jeune",on:"JAKU",kun:"waka",l:"N3"},{k:"苦",fr:"Amer/Souffrir",on:"KU",kun:"niga",l:"N3"},{k:"幸",fr:"Bonheur",on:"KOU",kun:"shiawa",l:"N3"},{k:"願",fr:"Souhait",on:"GAN",kun:"nega",l:"N3"},{k:"守",fr:"Protéger",on:"SHU",kun:"mamo",l:"N3"},{k:"録",fr:"Enregistrer",on:"ROKU",kun:"-",l:"N3"},
+            {k:"議",fr:"Débat",on:"GI",kun:"-",l:"N3"},{k:"張",fr:"Tendre",on:"CHOU",kun:"ha",l:"N3"},{k:"港",fr:"Port",on:"KOU",kun:"minato",l:"N3"},{k:"階",fr:"Étage",on:"KAI",kun:"-",l:"N3"},{k:"段",fr:"Marche/Degré",on:"DAN",kun:"-",l:"N3"},{k:"険",fr:"Risqué",on:"KEN",kun:"kewa",l:"N3"},{k:"申",fr:"Dire (humble)",on:"SHIN",kun:"mou",l:"N3"},{k:"頼",fr:"Confier/Demander",on:"RAI",kun:"tano",l:"N3"},{k:"船",fr:"Bateau",on:"SEN",kun:"fune",l:"N3"},{k:"座",fr:"S'asseoir",on:"ZA",kun:"suwa",l:"N3"},
+            {k:"眠",fr:"Dormir",on:"MIN",kun:"nemu",l:"N3"},{k:"泣",fr:"Pleurer",on:"KYUU",kun:"na",l:"N3"},{k:"並",fr:"Aligner",on:"HEI",kun:"nara",l:"N3"},{k:"迎",fr:"Accueillir",on:"GEI",kun:"muka",l:"N3"},{k:"送",fr:"Envoyer",on:"SOU",kun:"oku",l:"N3"},{k:"困",fr:"Difficulté",on:"KON",kun:"koma",l:"N3"},{k:"晩",fr:"Soir",on:"BAN",kun:"-",l:"N3"},{k:"忙",fr:"Occupé",on:"BOU",kun:"isoga",l:"N3"},{k:"耳",fr:"Oreille",on:"JI",kun:"mimi",l:"N3"},{k:"首",fr:"Cou",on:"SHU",kun:"kubi",l:"N3"},
+            {k:"顔",fr:"Visage",on:"GAN",kun:"kao",l:"N3"},{k:"頭",fr:"Tête",on:"TOU",kun:"atama",l:"N3"},{k:"毛",fr:"Poil/Cheveu",on:"MOU",kun:"ke",l:"N3"},{k:"形",fr:"Forme",on:"KEI/GYOU",kun:"katachi",l:"N3"},{k:"丸",fr:"Rond",on:"GAN",kun:"maru",l:"N3"},{k:"角",fr:"Angle",on:"KAKU",kun:"kado",l:"N3"},{k:"欠",fr:"Manquer",on:"KETSU",kun:"ka",l:"N3"},{k:"欲",fr:"Vouloir",on:"YOKU",kun:"ho",l:"N3"},{k:"止",fr:"Arrêter",on:"SHI",kun:"to",l:"N3"},{k:"正",fr:"Correct",on:"SEI",kun:"tada",l:"N3"},
+            {k:"武",fr:"Guerrier",on:"BU",kun:"-",l:"N3"},{k:"比",fr:"Comparer",on:"HI",kun:"kura",l:"N3"},{k:"決",fr:"Décider",on:"KETSU",kun:"ki",l:"N3"},{k:"波",fr:"Vague",on:"HA",kun:"nami",l:"N3"},{k:"湯",fr:"Eau chaude",on:"TOU",kun:"yu",l:"N3"},{k:"灯",fr:"Lampe",on:"TOU",kun:"hi",l:"N3"},{k:"炭",fr:"Charbon",on:"TAN",kun:"sumi",l:"N3"},{k:"熱",fr:"Chaleur",on:"NETSU",kun:"atsu",l:"N3"},{k:"父",fr:"Père",on:"FU",kun:"chichi",l:"N3"},{k:"片",fr:"Côté/Morceau",on:"HEN",kun:"kata",l:"N3"},
+            {k:"版",fr:"Édition",on:"HAN",kun:"-",l:"N3"},{k:"牙",fr:"Croc",on:"GA",kun:"kiba",l:"N3"},{k:"牛",fr:"Vache",on:"GYUU",kun:"ushi",l:"N3"},{k:"牧",fr:"Pâturage",on:"BOKU",kun:"maki",l:"N3"},{k:"物",fr:"Chose",on:"BUTSU",kun:"mono",l:"N3"},{k:"特",fr:"Spécial",on:"TOKU",kun:"-",l:"N3"},{k:"犬",fr:"Chien",on:"KEN",kun:"inu",l:"N3"},{k:"犯",fr:"Crime",on:"HAN",kun:"oka",l:"N3"},{k:"王",fr:"Roi",on:"OU",kun:"-",l:"N3"},{k:"現",fr:"Actuel",on:"GEN",kun:"arawa",l:"N3"},
+            {k:"田",fr:"Rizière",on:"DEN",kun:"ta",l:"N3"},{k:"画",fr:"Dessin",on:"GAKU",kun:"-",l:"N3"},{k:"界",fr:"Monde",on:"KAI",kun:"-",l:"N3"},{k:"疲",fr:"Fatigue",on:"HI",kun:"tsuka",l:"N3"},{k:"登",fr:"Grimper",on:"TOU",kun:"nobo",l:"N3"},{k:"白",fr:"Blanc",on:"HAKU",kun:"shiro",l:"N3"},
+		];
+
+        let stats = [];
+
+        function initStats() {
+            let saved = JSON.parse(localStorage.getItem('k_master_v6')) || [];
+            stats = rawDB.map(k => {
+                const s = saved.find(x => x.k === k.k);
+                return s ? {...k, ok: s.ok, err: s.err} : {...k, ok: 0, err: 0};
+            });
+        }
+
+        let currentPool = [], currentQ = null, streak = 0;
+
+        function updatePool() {
+            const activeLvls = Array.from(document.querySelectorAll('.lvl-btn.active')).map(b => b.dataset.lvl);
+            
+            // Calcul réel sur la base de données filtrée
+            currentPool = stats.filter(s => activeLvls.includes(s.l));
+            
+            // AFFICHAGE DU POOL CORRIGÉ : On prend la longueur de currentPool
+            document.getElementById('pool-display').innerText = currentPool.length;
+            
+            if(currentPool.length > 0) {
+                next();
+            } else {
+                document.getElementById('main-q').innerText = "Ø";
+                document.getElementById('opts').innerHTML = "";
+            }
+        }
+
+        function next() {
+            const mode = document.querySelector('input[name="m"]:checked').value;
+            currentQ = currentPool[Math.floor(Math.random()*currentPool.length)];
+            document.getElementById('msg').innerText = "";
+            
+            if(mode === 'k2f') {
+                document.getElementById('main-q').innerText = currentQ.k;
+                document.getElementById('extra-q').innerHTML = `ON: ${currentQ.on} | KUN: ${currentQ.kun}`;
+            } else {
+                document.getElementById('main-q').innerText = currentQ.fr;
+                document.getElementById('extra-q').innerText = "Trouvez le Kanji";
+            }
+
+            // Génération d'options parmi TOUTE la base (pas juste le pool) pour plus de difficulté
+            const randoms = stats.filter(x => x.k !== currentQ.k).sort(() => 0.5-Math.random()).slice(0,3);
+            const choices = [...randoms, currentQ].sort(() => 0.5-Math.random());
+            
+            const grid = document.getElementById('opts');
+            grid.innerHTML = "";
+            choices.forEach(c => {
+                const b = document.createElement('button');
+                b.className = 'opt';
+                b.innerText = (mode === 'k2f') ? c.fr : c.k;
+                b.onclick = () => check(b, c, mode);
+                grid.appendChild(b);
+            });
+        }
+
+        function check(btn, selected, mode) {
+            const correct = selected.k === currentQ.k;
+            const target = (mode === 'k2f') ? currentQ.fr : currentQ.k;
+            if(correct) {
+                streak++; currentQ.ok++;
+                btn.style.background = "var(--success)";
+                setTimeout(updatePool, 400);
+            } else {
+                streak = 0; currentQ.err++;
+                btn.style.background = "var(--error)";
+                document.getElementById('msg').innerHTML = `<span style="color:var(--error)">Rép: ${target}</span>`;
+                setTimeout(updatePool, 1600);
+            }
+            save();
+        }
+
+        function save() {
+            localStorage.setItem('k_master_v6', JSON.stringify(stats));
+            document.getElementById('streak').innerText = streak;
+            const list = document.getElementById('stats-list');
+            list.innerHTML = "";
+            [...stats].filter(s => s.err > 0).sort((a,b) => b.err - a.err).slice(0, 5).forEach(s => {
+                list.innerHTML += `<div class="err-row">
+                    <span><b>${s.k}</b> <span class="badge" style="background:var(--${s.l.toLowerCase()})">${s.l}</span></span>
+                    <span style="color:var(--error)">${s.err} ❌</span>
+                </div>`;
+            });
+        }
+
+        document.getElementById('lvl-selectors').addEventListener('click', e => {
+            if(e.target.classList.contains('lvl-btn')) {
+                e.target.classList.toggle('active');
+                updatePool();
+            }
+        });
+
+        document.querySelectorAll('input[name="m"]').forEach(r => r.onchange = updatePool);
+        
+        initStats();
+        updatePool();
+    </script>
+<a href="index.html" style="position: fixed; top: 10px; left: 10px; background: #1e293b; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-size: 14px; border: 1px solid #334155; z-index: 1000;">
+    🏠 Accueil
+</a>
+</body>
+</html>

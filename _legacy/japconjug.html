@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanese Conjugation Master</title>
+    <script src="https://unpkg.com/wanakana"></script>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
+            --accent: #f43f5e; --success: #10b981; --error: #ef4444; --muted: #94a3b8;
+            --jp-blue: #3b82f6;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px;
+        }
+        .container {
+            background-color: var(--card); padding: 1.5rem; border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 500px; text-align: center;
+        }
+        .config-panel {
+            background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin-bottom: 20px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; font-size: 0.8rem;
+        }
+        .config-group { display: flex; flex-direction: column; gap: 3px; }
+        .config-group label { color: var(--jp-blue); font-weight: bold; border-bottom: 1px solid #334155; margin-bottom: 4px; padding-bottom: 2px; }
+        
+        .word { font-size: 2.8rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
+        .meaning { color: var(--muted); font-size: 1.1rem; margin-bottom: 10px; }
+        
+        .instruction-badge { 
+            display: inline-block; padding: 6px 14px; border-radius: 10px; 
+            background: var(--bg); border: 1px solid #334155; font-size: 0.85rem; 
+            font-weight: bold; margin-bottom: 20px; color: var(--text);
+        }
+        
+        input[type="text"] {
+            width: 85%; padding: 15px; border-radius: 14px; border: 2px solid #334155;
+            background: #0f172a; color: white; text-align: center; font-size: 1.4rem; outline: none;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus { border-color: var(--jp-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        
+        #feedback { min-height: 28px; margin: 15px 0; font-weight: bold; font-size: 1.1rem; }
+        
+        .stats-container {
+            width: 100%; max-width: 500px; margin-top: 25px;
+            background: var(--card); border-radius: 20px; padding: 15px; box-sizing: border-box;
+        }
+        .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .stats-title { font-size: 0.9rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
+        .reset-btn { background: none; border: 1px solid var(--muted); color: var(--muted); border-radius: 5px; cursor: pointer; font-size: 0.7rem; padding: 2px 6px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        td { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: left; }
+        .err-count { color: var(--error); font-weight: bold; text-align: right; }
+        
+        .back-link { position: fixed; top: 10px; left: 10px; background: var(--card); color: white; text-decoration: none; padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-link">← 🏠 Accueil</a>
+
+    <div class="container">
+        <h2 style="margin:0 0 15px 0; letter-spacing: 1px;">Conjugaison Master</h2>
+        
+        <div class="config-panel">
+            <div class="config-group">
+                <label>Politesse</label>
+                <span><input type="checkbox" class="filter" data-type="polite" value="plain" checked> Casual</span>
+                <span><input type="checkbox" class="filter" data-type="polite" value="polite" checked> Polie (-masu)</span>
+            </div>
+            <div class="config-group">
+                <label>Temps</label>
+                <span><input type="checkbox" class="filter" data-type="tense" value="present" checked> Présent</span>
+                <span><input type="checkbox" class="filter" data-type="tense" value="past" checked> Passé</span>
+            </div>
+            <div class="config-group">
+                <label>Polarité</label>
+                <span><input type="checkbox" class="filter" data-type="polarity" value="affirmative" checked> (+) Affirm.</span>
+                <span><input type="checkbox" class="filter" data-type="polarity" value="negative" checked> (-) Négat.</span>
+            </div>
+            <div class="config-group">
+                <label>Type</label>
+                <span><input type="checkbox" class="filter" data-type="kind" value="verb" checked> Verbes</span>
+                <span><input type="checkbox" class="filter" data-type="kind" value="adj-i" checked> Adj -i</span>
+            </div>
+        </div>
+
+        <div id="word-display" class="word">---</div>
+        <div id="meaning-display" class="meaning">---</div>
+        <div id="instruction" class="instruction-badge">Initialisation...</div>
+        
+        <input type="text" id="answer-input" autocomplete="off" placeholder="さあ、どうぞ !">
+        
+        <div id="feedback"></div>
+
+        <div style="display:flex; justify-content: space-around; font-size: 0.85rem; color: var(--muted); border-top: 1px solid #334155; padding-top: 15px">
+            <span>Score: <b id="score" style="color:var(--text)">0</b></span>
+            <span>Série: <b id="streak" style="color:var(--jp-blue)">0</b></span>
+        </div>
+    </div>
+
+    <div class="stats-container">
+        <div class="stats-header">
+            <div class="stats-title">⚠️ Top 10 Erreurs</div>
+            <button class="reset-btn" onclick="resetStats()">Reset Stats</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Forme</th>
+                    <th>Attendu</th>
+                    <th style="text-align:right">Échecs</th>
+                </tr>
+            </thead>
+            <tbody id="stats-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const inputField = document.getElementById('answer-input');
+        // WanaKana convertit la saisie clavier latin en Hiragana automatiquement
+        wanakana.bind(inputField);
+
+        const database = [
+            { base: "食べる", meaning: "Manger", type: "verb", polite: "plain", tense: "present", polarity: "negative", ans: "たべない" },
+            { base: "食べる", meaning: "Manger", type: "verb", polite: "polite", tense: "present", polarity: "affirmative", ans: "たべます" },
+            { base: "行く", meaning: "Aller", type: "verb", polite: "plain", tense: "past", polarity: "affirmative", ans: "いった" },
+            { base: "行く", meaning: "Aller", type: "verb", polite: "polite", tense: "past", polarity: "negative", ans: "いきませんでした" },
+            { base: "高い", meaning: "Cher / Haut", type: "adj-i", polite: "plain", tense: "past", polarity: "negative", ans: "たかくなかった" },
+            { base: "寒い", meaning: "Froid", type: "adj-i", polite: "polite", tense: "present", polarity: "negative", ans: "さむくないです" },
+            { base: "話す", meaning: "Parler", type: "verb", polite: "plain", tense: "present", polarity: "negative", ans: "はなさない" },
+            { base: "見る", meaning: "Voir", type: "verb", polite: "polite", tense: "past", polarity: "affirmative", ans: "みました" }
+        ];
+
+        let currentQ = null;
+        let score = 0;
+        let streak = 0;
+        let errorStats = JSON.parse(localStorage.getItem('jp_conj_errors_v1')) || {};
+
+        function nextQuestion() {
+            const f = { polite: [], tense: [], polarity: [], kind: [] };
+            document.querySelectorAll('.filter:checked').forEach(el => f[el.dataset.type].push(el.value));
+
+            const pool = database.filter(item => 
+                f.polite.includes(item.polite) && f.tense.includes(item.tense) && 
+                f.polarity.includes(item.polarity) && f.kind.includes(item.type)
+            );
+
+            if(pool.length === 0) {
+                document.getElementById('word-display').innerText = "Ø";
+                document.getElementById('meaning-display').innerText = "Filtres vides";
+                return;
+            }
+
+            currentQ = pool[Math.floor(Math.random() * pool.length)];
+            document.getElementById('word-display').innerText = currentQ.base;
+            document.getElementById('meaning-display').innerText = currentQ.meaning;
+            
+            const polTxt = currentQ.polite === 'plain' ? 'CASUAL' : 'POLI';
+            const tenseTxt = currentQ.tense === 'present' ? 'PRÉSENT' : 'PASSÉ';
+            const polariTxt = currentQ.polarity === 'affirmative' ? '(+)' : '(-)';
+            
+            document.getElementById('instruction').innerText = `${polTxt} | ${tenseTxt} | ${polariTxt}`;
+            inputField.value = "";
+            inputField.style.borderColor = "#334155";
+            document.getElementById('feedback').innerText = "";
+        }
+
+        function updateErrorTable() {
+            const tbody = document.getElementById('stats-body');
+            tbody.innerHTML = "";
+            const sorted = Object.entries(errorStats)
+                .map(([key, data]) => ({ key, ...data }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+
+            if(sorted.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:var(--muted); padding:20px'>Aucune erreur ! がんばって !</td></tr>";
+                return;
+            }
+
+            sorted.forEach(err => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b style="color:var(--jp-blue)">${err.base}</b> <span style="font-size:0.7rem; color:var(--muted)">${err.form}</span></td>
+                        <td><code style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:4px">${err.ans}</code></td>
+                        <td class="err-count">${err.count}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function resetStats() {
+            if(confirm("Effacer le top des erreurs ?")) {
+                errorStats = {};
+                localStorage.removeItem('jp_conj_errors_v1');
+                updateErrorTable();
+            }
+        }
+
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const val = inputField.value.trim();
+                const fb = document.getElementById('feedback');
+                
+                if (val === currentQ.ans) {
+                    score++; streak++;
+                    fb.innerHTML = `<span style="color:var(--success)">正解 ! Correct ✨</span>`;
+                    inputField.style.borderColor = "var(--success)";
+                    setTimeout(nextQuestion, 800);
+                } else {
+                    streak = 0;
+                    fb.innerHTML = `<span style="color:var(--error)">Faux : ${currentQ.ans}</span>`;
+                    inputField.style.borderColor = "var(--error)";
+                    
+                    const errKey = `${currentQ.base}_${currentQ.polite}_${currentQ.tense}_${currentQ.polarity}`;
+                    if(!errorStats[errKey]) {
+                        errorStats[errKey] = { 
+                            count: 0, 
+                            base: currentQ.base,
+                            ans: currentQ.ans,
+                            form: `${currentQ.polite.slice(0,2)}.${currentQ.tense.slice(0,2)}`
+                        };
+                    }
+                    errorStats[errKey].count++;
+                    localStorage.setItem('jp_conj_errors_v1', JSON.stringify(errorStats));
+                    updateErrorTable();
+                }
+                document.getElementById('score').innerText = score;
+                document.getElementById('streak').innerText = streak;
+            }
+        });
+
+        document.querySelectorAll('.filter').forEach(el => el.onchange = nextQuestion);
+        updateErrorTable();
+        nextQuestion();
+    </script>
+</body>
+</html>

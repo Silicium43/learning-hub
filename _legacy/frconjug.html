@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Français Master 🇫🇷</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text-dim: #94a3b8;
+            --fra-primary: #3b82f6; --err: #ef4444; --ok: #10b981; --gold: #f59e0b;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg); color: var(--text); margin: 0;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px;
+        }
+        .app-container { width: 100%; max-width: 500px; text-align: center; }
+        .card { background: var(--card); padding: 2rem; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; position: relative; margin-bottom: 20px; }
+        .screen { display: none; } .active { display: block; }
+        .streak-display { font-size: 1.2rem; font-weight: bold; color: var(--gold); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        h1 { margin: 0 0 10px 0; font-size: 2.2rem; font-weight: 900; }
+        select, input { width: 100%; padding: 16px; border-radius: 12px; border: 2px solid #334155; background: var(--bg); color: white; font-size: 16px; margin-bottom: 15px; outline: none; }
+        .btn-primary { width: 100%; padding: 18px; border-radius: 12px; border: none; background: var(--fra-primary); color: white; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        .btn-focus { background: #8b5cf6; display: none; }
+        .explanation-box { background: rgba(255,255,255,0.03); border-left: 4px solid var(--fra-primary); padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; }
+        
+        /* Stats Table Styles */
+        .stats-card { background: rgba(30, 41, 59, 0.7); padding: 1.5rem; border-radius: 16px; border: 1px dashed #475569; margin-top: 20px; }
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .stats-table th { color: var(--text-dim); text-align: left; padding-bottom: 10px; font-weight: 400; }
+        .stats-table td { padding: 8px 0; border-bottom: 1px solid #334155; text-align: left; }
+        .err-val { color: var(--err); font-weight: bold; }
+        
+        #display-trans { font-style: italic; color: var(--text-dim); font-size: 1.1rem; margin-bottom: 15px; }
+        .lang-label { font-size: 0.8rem; color: var(--text-dim); text-align: left; display: block; margin-bottom: 5px; margin-top: 10px;}
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div id="screen-setup" class="screen active">
+            <div class="streak-display">🔥 <span id="streak-setup">0</span></div>
+            <h1>Français Master 🇫🇷</h1>
+            
+            <div class="card">
+                <label class="lang-label" id="lbl-ui">Interface Language / Idioma:</label>
+                <select id="ui-lang-select" onchange="changeUILanguage()">
+                    <option value="en">English 🇬🇧</option>
+                    <option value="es" selected>Español 🇪🇸</option>
+                </select>
+
+                <label class="lang-label" id="lbl-lvl">Difficulty / Dificultad:</label>
+                <select id="level-select">
+                    <option value="1" id="opt-l1">Nivel 1: Regulares (ER/IR)</option>
+                    <option value="2" id="opt-l2">Nivel 2: Esenciales</option>
+                    <option value="3" selected id="opt-l3">Nivel 3: Todos los verbos</option>
+                </select>
+
+                <label class="lang-label" id="lbl-tense">Tense / Tiempo:</label>
+                <select id="time-select">
+                    <option value="Présent">Présent</option>
+                    <option value="Passé Composé">Passé Composé</option>
+                </select>
+
+                <button id="btn-start" class="btn-primary" onclick="startQuiz(false)">Empezar 🚀</button>
+                <button id="btn-focus" class="btn-primary btn-focus" onclick="startQuiz(true)">Puntos Débiles ⚡</button>
+            </div>
+
+            <div class="stats-card">
+                <h3 id="stats-title" style="margin-top:0; font-size:1rem; color:var(--text-dim)">Top 10 Errors</h3>
+                <table class="stats-table">
+                    <thead>
+                        <tr><th id="th-verb">Verb</th><th id="th-err">Errors</th><th id="th-ok">Ok</th></tr>
+                    </thead>
+                    <tbody id="stats-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-quiz" class="screen">
+            <div class="streak-display">🔥 <span id="streak-quiz">0</span></div>
+            <h1 id="quiz-title">Práctica 🇫🇷</h1>
+            <div class="card">
+                <div id="display-verb" style="font-size: 2.2rem; font-weight: 900; color: var(--fra-primary);">---</div>
+                <div id="display-trans">---</div>
+                <div id="display-tense" style="text-transform:uppercase; font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">---</div>
+                <div id="display-prompt" style="font-size:1.4rem; margin-bottom:20px;">---</div>
+                <input type="text" id="user-input" autocomplete="off" autocorrect="off" spellcheck="false">
+                <div id="feedback" style="font-weight:bold; min-height:24px;"></div>
+                <div id="explanation" style="display:none"></div>
+            </div>
+            <button id="btn-quit" class="btn-primary" style="background:#475569" onclick="location.reload()">Menu</button>
+        </div>
+    </div>
+
+<script>
+    const uiStrings = {
+        en: {
+            start: "Start 🚀", focus: "Weak Points ⚡", quit: "Quit", 
+            topErrors: "Top 10 Errors", practice: "Practice 🇫🇷", 
+            placeholder: "Type the answer...", correct: "Excellent!", incorrect: "Wrong, copy this:",
+            l1: "Level 1: Regular (ER/IR)", l2: "Level 2: Essentials", l3: "Level 3: All Verbs",
+            lblUi: "Interface Language:", lblLvl: "Difficulty:", lblTense: "Tense:",
+			focus: "Weak Points ⚡",
+            thVerb: "Verb", thErr: "Errors"
+        },
+        es: {
+            start: "Empezar 🚀", focus: "Puntos Débiles ⚡", quit: "Salir", 
+            topErrors: "Top 10 Errores", practice: "Práctica 🇫🇷", 
+            placeholder: "Escribe la respuesta...", correct: "¡Excelente!", incorrect: "Incorrecto, copia:",
+            l1: "Nivel 1: Regulares (ER/IR)", l2: "Nivel 2: Esenciales", l3: "Nivel 3: Todos los verbos",
+            lblUi: "Idioma de la interfaz:", lblLvl: "Dificultad:", lblTense: "Tiempo:",
+			focus: "Puntos Débiles ⚡",
+            thVerb: "Verbo", thErr: "Errores"
+        }
+    };
+
+    const db = {
+        people: ["Je", "Tu", "Il/Elle", "Nous", "Vous", "Ils/Elles"],
+        verbs: [
+            { fr: "Être", en: "to be", es: "ser/estar", level: 2, irr: { "Présent": ["suis", "es", "est", "sommes", "êtes", "sont"], "Passé Composé": ["ai été", "as été", "a été", "avons été", "avez été", "ont été"] } },
+            { fr: "Avoir", en: "to have", es: "tener", level: 2, irr: { "Présent": ["ai", "as", "a", "avons", "avez", "ont"], "Passé Composé": ["ai eu", "as eu", "a eu", "avons eu", "avez eu", "ont eu"] } },
+            { fr: "Aller", en: "to go", es: "ir", level: 2, irr: { "Présent": ["vais", "vas", "va", "allons", "allez", "vont"], "Passé Composé": ["suis allé", "es allé", "est allé", "sommes allés", "êtes allés", "sont allés"] } },
+            { fr: "Aimer", en: "to love", es: "amar", level: 1, group: "er" }, 
+            { fr: "Manger", en: "to eat", es: "comer", level: 1, group: "er" },
+            { fr: "Parler", en: "to speak", es: "hablar", level: 1, group: "er" },
+            { fr: "Travailler", en: "to work", es: "trabajar", level: 1, group: "er" },
+            { fr: "Finir", en: "to finish", es: "terminar", level: 1, group: "ir" },
+            { fr: "Faire", en: "to do/make", es: "hacer", level: 3, irr: { "Présent": ["fais", "fais", "fait", "faisons", "faites", "font"], "Passé Composé": ["ai fait", "as fait", "a fait", "avons fait", "avez fait", "ont fait"] } },
+            { fr: "Prendre", en: "to take", es: "tomar", level: 3, irr: { "Présent": ["prends", "prends", "prend", "prenons", "prenez", "prennent"], "Passé Composé": ["ai pris", "as pris", "a pris", "avons pris", "avez pris", "ont pris"] } }
+            // Ajoutez d'autres verbes ici...
+        ]
+    };
+
+    let userData = JSON.parse(localStorage.getItem('fra_master_v6')) || { streak: 0, verbs: {}, uiLang: 'es' };
+    let state = { currentQ: null, isWaiting: false, focusMode: false };
+
+    function changeUILanguage() {
+        userData.uiLang = document.getElementById('ui-lang-select').value;
+    save();     
+    updateUI(); // C'est ici que tout se déclenche
+    }
+
+    function renderStats() {
+        const body = document.getElementById('stats-body');
+        body.innerHTML = '';
+        const sorted = Object.entries(userData.verbs)
+            .filter(([_, data]) => data.err > 0)
+            .sort((a,b) => b[1].err - a[1].err)
+            .slice(0, 10);
+            
+        if(sorted.length === 0) {
+            body.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-dim)">No data yet</td></tr>`;
+            return;
+        }
+
+        sorted.forEach(([name, data]) => {
+            body.innerHTML += `<tr><td>${name}</td><td class="err-val">${data.err}</td><td>${data.ok}</td></tr>`;
+        });
+    }
+
+	function updateUI() {
+    // Mise à jour des scores et menus
+    document.getElementById('streak-setup').innerText = userData.streak;
+    document.getElementById('streak-quiz').innerText = userData.streak;
+    document.getElementById('ui-lang-select').value = userData.uiLang;
+    
+    // Gestion du bouton "Weak Points / Puntos Débiles"
+    const hasErrors = Object.values(userData.verbs).some(v => v.err > 0);
+    const btnFocus = document.getElementById('btn-focus');
+    
+    if (hasErrors) {
+        btnFocus.style.display = 'block';
+        btnFocus.innerText = uiStrings[userData.uiLang].focus;
+    } else {
+        btnFocus.style.display = 'none';
+    }
+
+    // ON APPELLE LA NOUVELLE FONCTION ICI
+    translateStaticInterface();
+	}
+function translateStaticInterface() {
+    const s = uiStrings[userData.uiLang];
+    
+    // Titres et Boutons
+    document.getElementById('btn-start').innerText = s.start;
+    document.getElementById('btn-quit').innerText = s.quit;
+    document.getElementById('stats-title').innerText = s.topErrors;
+    document.getElementById('quiz-title').innerText = s.practice;
+    
+    // Inputs et Sélecteurs
+    document.getElementById('user-input').placeholder = s.placeholder;
+    document.getElementById('lbl-ui').innerText = s.lblUi;
+    document.getElementById('lbl-lvl').innerText = s.lblLvl;
+    document.getElementById('lbl-tense').innerText = s.lblTense;
+    document.getElementById('opt-l1').innerText = s.l1;
+    document.getElementById('opt-l2').innerText = s.l2;
+    document.getElementById('opt-l3').innerText = s.l3;
+    
+    // Tableau des scores
+    document.getElementById('th-verb').innerText = s.thVerb;
+    document.getElementById('th-err').innerText = s.thErr;
+    
+    renderStats(); // Rafraîchit aussi le tableau des 10 erreurs
+}
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-' + id).classList.add('active');
+    }
+
+    function startQuiz(focus) {
+        state.focusMode = focus;
+        showScreen('quiz');
+        next();
+    }
+
+    function next() {
+        state.isWaiting = false;
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('feedback').innerText = '';
+        const input = document.getElementById('user-input');
+        input.value = ''; input.style.borderColor = "#334155";
+        
+        const lvl = parseInt(document.getElementById('level-select').value);
+        let pool = db.verbs.filter(v => (lvl === 1 ? v.level === 1 : (lvl === 2 ? v.level <= 2 : true)));
+        
+        if (state.focusMode) {
+            const errPool = pool.filter(v => userData.verbs[v.fr] && userData.verbs[v.fr].err > 0);
+            if (errPool.length > 0) pool = errPool;
+        }
+
+        const verb = pool[Math.floor(Math.random() * pool.length)];
+        const tense = document.getElementById('time-select').value;
+        const pIdx = Math.floor(Math.random() * 6);
+        
+        let answer = "";
+        if (verb.irr) {
+            answer = verb.irr[tense][pIdx];
+        } else {
+            const root = verb.fr.slice(0, -2);
+            if (tense === "Présent") {
+                const ends = verb.group === "er" ? ["e", "es", "e", "ons", "ez", "ent"] : ["is", "is", "it", "issons", "issez", "issent"];
+                answer = root + ends[pIdx];
+            } else {
+                const aux = ["ai", "as", "a", "avons", "avez", "ont"];
+                answer = aux[pIdx] + " " + (verb.group === "er" ? root.toLowerCase() + "é" : root.toLowerCase() + "i");
+            }
+        }
+
+        let person = db.people[pIdx];
+        if (person === "Je" && /^[aeiouh]/i.test(answer)) person = "J'";
+        
+        state.currentQ = { verb: verb.fr, tense: tense, person: person, answer: answer, trans: verb[userData.uiLang] };
+        document.getElementById('display-verb').innerText = state.currentQ.verb;
+        document.getElementById('display-trans').innerText = state.currentQ.trans;
+        document.getElementById('display-tense').innerText = state.currentQ.tense;
+        document.getElementById('display-prompt').innerText = person + (person === "J'" ? "" : " ") + "...";
+    }
+
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const val = e.target.value.trim().toLowerCase();
+            const correct = state.currentQ.answer.toLowerCase();
+            const s = uiStrings[userData.uiLang];
+            if(!userData.verbs[state.currentQ.verb]) userData.verbs[state.currentQ.verb] = {err:0, ok:0};
+
+            if (val === correct) {
+                if (!state.isWaiting) { userData.verbs[state.currentQ.verb].ok++; userData.streak++; }
+                document.getElementById('feedback').innerHTML = `<span style="color:var(--ok)">${s.correct}</span>`;
+                save(); updateUI(); setTimeout(next, 800);
+            } else {
+                state.isWaiting = true;
+                userData.verbs[state.currentQ.verb].err++; userData.streak = 0; 
+                document.getElementById('feedback').innerHTML = `<span style="color:var(--err)">${s.incorrect}</span>`;
+                e.target.style.borderColor = "var(--err)";
+                document.getElementById('explanation').innerHTML = `<div class="explanation-box">👉 <span style="color:var(--fra-primary); font-weight:bold; font-size:1.2rem;">${state.currentQ.answer}</span></div>`;
+                document.getElementById('explanation').style.display = 'block';
+                e.target.value = ""; save(); updateUI();
+            }
+        }
+    });
+
+    function save() { localStorage.setItem('fra_master_v6', JSON.stringify(userData)); }
+    updateUI();
+</script>
+<a href="index.html" style="position: fixed; top: 10px; left: 10px; background: #1e293b; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-size: 14px; border: 1px solid #334155; z-index: 1000;">
+    🏠 Accueil
+</a>
+</body>
+</html>

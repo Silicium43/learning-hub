@@ -1,0 +1,224 @@
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 2rem;
+}
+
+.back-link {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background-color: var(--surface-color);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.back-link:hover {
+  background-color: var(--surface-color-light);
+  border-color: var(--text-secondary);
+}
+
+.game-card {
+  width: 100%;
+  max-width: 500px;
+  background-color: var(--surface-color);
+  border-radius: 24px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  border: 1px solid var(--border-color);
+}
+
+.game-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.config-panel {
+  background: var(--bg-color);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-group label {
+  color: var(--highlight-color);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+
+.question-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.word-base {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  color: #fff;
+  font-family: var(--font-base);
+}
+
+.word-meaning {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.instruction-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.answer-input {
+  width: 90%;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background: var(--bg-color);
+  color: white;
+  text-align: center;
+  font-size: 1.3rem;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.answer-input:focus {
+  border-color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(63, 81, 181, 0.2);
+}
+
+.answer-input.success {
+  border-color: var(--success-color);
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.answer-input.error {
+  border-color: var(--accent-color);
+  background-color: rgba(229, 57, 53, 0.1);
+}
+
+.feedback-text {
+  min-height: 24px;
+  margin: 1rem 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
+.text-light { color: #fff; }
+.text-highlight { color: var(--highlight-color); }
+.text-muted { color: var(--text-secondary); }
+.text-error { color: var(--accent-color); }
+.text-xs { font-size: 0.7rem; }
+.text-right { text-align: right; }
+.font-bold { font-weight: bold; }
+
+.error-stats-card {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 1.5rem;
+  background: var(--surface-color);
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stats-title {
+  font-size: 0.95rem;
+  color: var(--accent-color);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.reset-btn {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.reset-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.stats-table th {
+  text-align: left;
+  color: var(--text-secondary);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 500;
+}
+
+.stats-table td {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.code-badge {
+  background: var(--bg-color);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  border: 1px solid rgba(255,255,255,0.05);
+}
