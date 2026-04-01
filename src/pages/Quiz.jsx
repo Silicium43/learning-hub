@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import localforage from 'localforage';
 import { wkKanjiData } from '../data/wkKanjiData';
+import kanjiDict from '../data/kanjiDict.json';
 import './Games.css';
 
 function Quiz() {
@@ -10,6 +11,7 @@ function Quiz() {
   const [minLevel, setMinLevel] = useState(1);
   const [maxLevel, setMaxLevel] = useState(60);
   const [studyMode, setStudyMode] = useState('both');
+  const [showRadicals, setShowRadicals] = useState(false);
 
   const [pool, setPool] = useState([]);
   const [currentQ, setCurrentQ] = useState(null);
@@ -82,7 +84,7 @@ function Quiz() {
     if (feedback) return;
     
     if (selected === currentQ.target) {
-      setFeedback({ type: 'success', text: 'Excellent !' });
+      setFeedback({ type: 'success', text: 'Excellent !', selected });
       setStats(s => ({ correct: s.correct + 1, total: s.total + 1 }));
       setStreak(s => {
           const ns = s + 1;
@@ -91,7 +93,7 @@ function Quiz() {
       });
       setTimeout(() => generateNextQuestion(), 800);
     } else {
-      setFeedback({ type: 'error', text: `Faux ! C'était : ${currentQ.target}` });
+      setFeedback({ type: 'error', text: `Faux ! C'était : ${currentQ.target}`, selected });
       setStats(s => ({ ...s, total: s.total + 1 }));
       setStreak(0);
       logError(currentQ);
@@ -135,7 +137,12 @@ function Quiz() {
                   </div>
               </div>
 
-              <button onClick={startQuiz} style={{ width: '100%', padding: '1.2rem', background: 'var(--text-primary)', color: 'var(--bg-color)', fontSize: '1.1rem', fontWeight: 'bold' }}>
+              <div style={{ background: 'var(--bg-color)', padding: '1.2rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setShowRadicals(!showRadicals)}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>Afficher les Radicaux (Indice)</span>
+                  <input type="checkbox" checked={showRadicals} readOnly style={{ width: '20px', height: '20px', accentColor: 'var(--highlight-color)' }} />
+              </div>
+
+              <button onClick={startQuiz} style={{ width: '100%', padding: '1.2rem', background: 'var(--text-primary)', color: 'var(--bg-color)', fontSize: '1.1rem', fontWeight: 'bold', borderRadius: '12px' }}>
                   Commencer le Quiz
               </button>
             </div>
@@ -162,9 +169,15 @@ function Quiz() {
 
         {currentQ && (
           <div className="question-box">
-            <div className="word-base" style={{ fontSize: '5rem', margin: '1rem 0' }}>{currentQ.k}</div>
+            <div className="word-base" style={{ fontSize: '5rem', margin: '1rem 0 0.5rem 0', lineHeight: '1' }}>{currentQ.k}</div>
             
-            <div className="instruction-badge" style={{ color: currentQ.type === 'reading' ? 'var(--highlight-color)' : 'var(--accent-color)', background: 'transparent', border: '1px solid currentColor', fontSize: '1rem' }}>
+            {showRadicals && kanjiDict[currentQ.k]?.wk_radicals && (
+                <div style={{ color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', background: 'rgba(0,0,0,0.2)', padding: '6px 12px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                    Indice: <span style={{ color: 'var(--accent-color)' }}>{kanjiDict[currentQ.k].wk_radicals.join(' + ')}</span>
+                </div>
+            )}
+
+            <div className="instruction-badge" style={{ color: currentQ.type === 'reading' ? 'var(--highlight-color)' : 'var(--accent-color)', background: 'transparent', border: '1px solid currentColor', fontSize: '1rem', marginTop: '0.5rem' }}>
               {currentQ.type === 'reading' ? 'Lecture (Kana)' : 'Sens (Anglais)'}
             </div>
 
@@ -174,7 +187,7 @@ function Quiz() {
                         key={i} 
                         disabled={!!feedback}
                         style={{
-                            background: feedback && opt === currentQ.target ? 'var(--success-color)' : 'var(--surface-color-light)',
+                            background: feedback && opt === currentQ.target ? 'var(--success-color)' : (feedback && feedback.type === 'error' && feedback.selected === opt ? 'var(--accent-color)' : 'var(--surface-color-light)'),
                             color: 'var(--text-primary)', padding: '1.5rem 1rem', fontSize: '1.1rem', border: '1px solid var(--border-color)', borderRadius: '12px'
                         }}
                         onClick={() => submitAnswer(opt)}>

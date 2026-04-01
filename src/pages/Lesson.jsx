@@ -19,19 +19,18 @@ function Lesson() {
 
   useEffect(() => {
     async function load() {
-      const saved = await localforage.getItem('nhg_srs_data') || {};
-      setSrsData(saved);
+      const saved = await localforage.getItem('nhg_srs_data');
+      setSrsData(saved || {});
     }
     load();
   }, []);
 
   if (!srsData) return <div className="game-container"><div className="game-card">Chargement...</div></div>;
 
-  // Find the lowest group number that still has locked items (srsLevel === 0)
   const lockedItems = db.filter(item => {
       const d = srsData[item.id];
-      // If it exists but is level 0, it's locked.
-      return d && d.srsLevel === 0;
+      // If it doesn't exist yet or is level 0, it's locked/available for lesson
+      return !d || (d.srsLevel === 0);
   });
 
   // Group items by "group" number
@@ -58,7 +57,8 @@ function Lesson() {
           // Finish lesson: unlock all items in activeGroup
           const newData = { ...srsData };
           activeGroup.forEach(item => {
-              newData[item.id] = { ...newData[item.id], srsLevel: 1, nextReview: Date.now() + 4*3600*1000, isUnlocked: true };
+              // Immediately unlock for review so user feels the progression
+              newData[item.id] = { ...newData[item.id], srsLevel: 1, nextReview: Date.now(), isUnlocked: true };
           });
           await localforage.setItem('nhg_srs_data', newData);
           alert('Leçon terminée ! Ces mots ont été ajoutés à vos révisions (Apprenti 1).');

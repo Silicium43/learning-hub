@@ -4,7 +4,7 @@ import './Home.css';
 function Home() {
   return (
     <div className="home-container">
-      <Link to="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2rem' }}>
+      <Link to="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '1.5rem', marginBottom: '2rem' }}>
           ← Retour aux Langues
       </Link>
       <h2 className="title">Apprentissage Détaillé</h2>
@@ -33,6 +33,11 @@ function Home() {
           <div className="card-icon">📊</div>
           <h3>Statistiques</h3>
           <p>Analysez vos erreurs les plus fréquentes.</p>
+        </Link>
+        <Link to="/jp/lexicon" className="menu-card">
+          <div className="card-icon">辞</div>
+          <h3>Lexique</h3>
+          <p>Dictionnaire des Kanjis par radicaux.</p>
         </Link>
       </div>
 

@@ -57,29 +57,97 @@ const depts = [
 ];
 
 export default function FrenchGeography() {
+  const [lang, setLang] = useState('en');
   const [scores, setScores] = useState({});
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(0);
   const [currDept, setCurrDept] = useState(null);
   const [inputVal, setInputVal] = useState('');
-  const [feedback, setFeedback] = useState({ text: 'Trouve la réponse...', status: 'neutral' });
+  const [feedback, setFeedback] = useState({ text: 'Find the answer...', status: 'neutral' });
   const [mode, setMode] = useState('t-n'); // label, qField, rField
   const [showStats, setShowStats] = useState(false);
   const mapRef = useRef(null);
   const inputRef = useRef(null);
 
-  const modeConfig = {
-    "t-n": { label: "Numéro de", qField: "t", rField: "n", placeholder: "Ex: 01..." },
-    "t-p": { label: "Préfecture de", qField: "t", rField: "p", placeholder: "Ex: Lyon..." },
-    "n-t": { label: "Département n°", qField: "n", rField: "t", placeholder: "Ex: Isère..." },
-    "n-p": { label: "Préfecture du n°", qField: "n", rField: "p", placeholder: "Ex: Lyon..." },
-    "p-t": { label: "Département de", qField: "p", rField: "t", placeholder: "Ex: Isère..." },
-    "p-n": { label: "Numéro de (Préf)", qField: "p", rField: "n", placeholder: "Ex: 33..." }
+  const ui = {
+    en: {
+        back: "Back",
+        streak: "Streak:",
+        best: "Best:",
+        stats: "Stats",
+        statistics: "Statistics",
+        studyMode: "Study Mode",
+        find: "Find the answer...",
+        correct: "Correct! 🎉",
+        wrong: "Wrong: it was",
+        modes: [
+            { v: "t-n", t: "Name ➔ Number" },
+            { v: "t-p", t: "Name ➔ Prefecture" },
+            { v: "n-t", t: "Number ➔ Name" },
+            { v: "n-p", t: "Number ➔ Prefecture" },
+            { v: "p-t", t: "Prefecture ➔ Name" },
+            { v: "p-n", t: "Prefecture ➔ Number" }
+        ],
+        labels: {
+            "t-n": "Number of",
+            "t-p": "Prefecture of",
+            "n-t": "Department n°",
+            "n-p": "Prefecture of n°",
+            "p-t": "Department of",
+            "p-n": "Number of (Pref)"
+        },
+        placeholders: {
+            "t-n": "Ex: 01...",
+            "t-p": "Ex: Lyon...",
+            "n-t": "Ex: Isère...",
+            "n-p": "Ex: Lyon...",
+            "p-t": "Ex: Isère...",
+            "p-n": "Ex: 33..."
+        }
+    },
+    es: {
+        back: "Volver",
+        streak: "Racha:",
+        best: "Mejor:",
+        stats: "Estadísticas",
+        statistics: "Estadísticas",
+        studyMode: "Modo de estudio",
+        find: "Encuentra la respuesta...",
+        correct: "¡Correcto! 🎉",
+        wrong: "Incorrecto: era",
+        modes: [
+            { v: "t-n", t: "Nombre ➔ Número" },
+            { v: "t-p", t: "Nombre ➔ Prefectura" },
+            { v: "n-t", t: "Número ➔ Nombre" },
+            { v: "n-p", t: "Número ➔ Prefectura" },
+            { v: "p-t", t: "Prefectura ➔ Nombre" },
+            { v: "p-n", t: "Prefectura ➔ Número" }
+        ],
+        labels: {
+            "t-n": "Número de",
+            "t-p": "Prefectura de",
+            "n-t": "Departamento n°",
+            "n-p": "Prefectura de n°",
+            "p-t": "Departamento de",
+            "p-n": "Número de (Pref)"
+        },
+        placeholders: {
+            "t-n": "P. ej: 01...",
+            "t-p": "P. ej: Lyon...",
+            "n-t": "P. ej: Isère...",
+            "n-p": "P. ej: Lyon...",
+            "p-t": "P. ej: Isère...",
+            "p-n": "P. ej: 33..."
+        }
+    }
   };
+
+  const curUI = ui[lang] || ui.en;
 
   useEffect(() => {
     localforage.getItem('fra_geo_scores').then(s => { if (s) setScores(s); });
     localforage.getItem('fra_geo_best').then(b => { if (b) setBest(b); });
+    localforage.getItem('fra_source_lang').then(l => { if (l) setLang(l); });
   }, []);
 
   // Mount vanilla DOM map ONCE to bypass React virtual DOM completely (Legacy behavior)
@@ -112,7 +180,7 @@ export default function FrenchGeography() {
 
   useEffect(() => {
     initGame();
-  }, [mode]);
+  }, [mode, lang]);
 
   useEffect(() => {
     if (!currDept || !mapRef.current) return;
@@ -138,7 +206,7 @@ export default function FrenchGeography() {
     const nextDept = depts[Math.floor(Math.random() * depts.length)];
     setCurrDept(nextDept);
     setInputVal('');
-    setFeedback({ text: 'Trouve la réponse...', status: 'neutral' });
+    setFeedback({ text: curUI.find, status: 'neutral' });
     setTimeout(() => { if(inputRef.current) inputRef.current.focus(); }, 100);
   };
 
@@ -146,9 +214,8 @@ export default function FrenchGeography() {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && currDept) {
-      const config = modeConfig[mode];
-      const rType = config.rField;
-      const expected = currDept[rType].toString();
+      const rField = (mode === 't-n' || mode === 'p-n') ? 'n' : (mode === 't-p' || mode === 'n-p' ? 'p' : 't');
+      const expected = currDept[rField].toString();
       
       const newScores = { ...scores };
       let newStreak = streak;
@@ -162,12 +229,12 @@ export default function FrenchGeography() {
           setBest(newBest);
           localforage.setItem('fra_geo_best', newBest);
         }
-        setFeedback({ text: 'Correct ! 🎉', status: 'success' });
+        setFeedback({ text: curUI.correct, status: 'success' });
         setTimeout(initGame, 1000);
       } else {
         newScores[currDept.n] = (newScores[currDept.n] || 0) - 1;
         newStreak = 0;
-        setFeedback({ text: `Faux : c'était ${expected}`, status: 'error' });
+        setFeedback({ text: `${curUI.wrong}: ${expected}`, status: 'error' });
         setInputVal('');
       }
 
@@ -182,21 +249,21 @@ export default function FrenchGeography() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 animate-fade-in relative pt-14">
       <Link to="/fr" className="fixed top-4 left-4 glass px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-white/10 transition z-50">
-        🔙 Retour
+        🔙 {curUI.back}
       </Link>
 
       <div className="w-full max-w-5xl">
         <div className="flex justify-between items-center mb-6">
           <div className="flex gap-6">
             <div className="text-sm font-bold uppercase tracking-widest text-[var(--text)] opacity-80">
-              Série: <span className="text-[var(--accent-color)]">{streak}</span> 🔥
+              {curUI.streak} <span className="text-[var(--accent-color)]">{streak}</span> 🔥
             </div>
             <div className="text-sm font-bold uppercase tracking-widest text-[var(--text)] opacity-80">
-              Record: <span className="text-emerald-400">{best}</span> 🏆
+              {curUI.best} <span className="text-emerald-400">{best}</span> 🏆
             </div>
           </div>
           <button onClick={() => setShowStats(!showStats)} className="px-4 py-2 glass rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition border border-white/10">
-            📊 Stats
+            📊 {curUI.stats}
           </button>
         </div>
 
@@ -209,7 +276,7 @@ export default function FrenchGeography() {
           <div className="w-full lg:w-2/5 p-8 flex flex-col justify-center relative">
             {showStats ? (
               <div className="h-full flex flex-col">
-                <h3 className="text-2xl font-black mb-4 theme-gradient-text font-serif">Statistiques</h3>
+                <h3 className="text-2xl font-black mb-4 theme-gradient-text font-serif">{curUI.statistics}</h3>
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2 max-h-[400px]">
                   {sortedDepts.map(d => {
                     const s = scores[d.n] || 0;
@@ -232,30 +299,29 @@ export default function FrenchGeography() {
               currDept && (
                 <>
                   <div className="mb-8">
-                    <label className="block text-xs uppercase tracking-[0.2em] opacity-60 mb-3 font-bold">Mode d'étude</label>
+                    <label className="block text-xs uppercase tracking-[0.2em] opacity-60 mb-3 font-bold">{curUI.studyMode}</label>
                     <select value={mode} onChange={e => setMode(e.target.value)} className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-[#d4af37] text-sm font-bold">
-                      <option value="t-n">Nom ➔ Numéro</option>
-                      <option value="t-p">Nom ➔ Préfecture</option>
-                      <option value="n-t">Numéro ➔ Nom</option>
-                      <option value="n-p">Numéro ➔ Préfecture</option>
-                      <option value="p-t">Préfecture ➔ Nom</option>
-                      <option value="p-n">Préfecture ➔ Numéro</option>
+                       {curUI.modes.map(m => (
+                         <option key={m.v} value={m.v}>{m.t}</option>
+                       ))}
                     </select>
                   </div>
 
                   <div className="text-center mb-8 flex-1 flex flex-col justify-center">
-                    <p className="text-sm font-bold tracking-widest uppercase opacity-70 mb-2">{modeConfig[mode].label}</p>
-                    <h2 className="text-4xl lg:text-5xl font-black font-serif text-[#d4af37] drop-shadow-md leading-tight">{currDept[modeConfig[mode].qField]}</h2>
+                    <p className="text-sm font-bold tracking-widest uppercase opacity-70 mb-2">{curUI.labels[mode]}</p>
+                    <h2 className="text-4xl lg:text-5xl font-black font-serif text-[#d4af37] drop-shadow-md leading-tight">{currDept[(mode === 't-n' || mode === 't-p') ? 't' : (mode === 'n-t' || mode === 'n-p' ? 'n' : 'p')]}</h2>
                   </div>
 
                   <div className="relative mb-4">
                     <input
                       ref={inputRef}
                       type="text"
+                      inputMode={mode.endsWith('-n') ? "numeric" : "text"}
+                      pattern={mode.endsWith('-n') ? "[0-9]*" : undefined}
                       value={inputVal}
                       onChange={e => setInputVal(e.target.value)}
                       onKeyDown={handleKeyPress}
-                      placeholder={modeConfig[mode].placeholder}
+                      placeholder={curUI.placeholders[mode]}
                       autoComplete="off" spellCheck="false" autoCorrect="off" autoCapitalize="none"
                       className="w-full p-5 rounded-2xl bg-black/40 border-2 border-white/10 text-white text-center text-xl font-bold outline-none focus:border-[#d4af37] shadow-inner transition"
                     />

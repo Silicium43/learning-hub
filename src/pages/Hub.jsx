@@ -43,6 +43,13 @@ function Hub() {
             <p style={{ margin: 0, color: '#5c7c99', textAlign: 'center', fontFamily: 'Outfit' }}>Conjugaison ludique.</p>
         </Link>
 
+        {/* Divers */}
+        <Link to="/misc" style={{ background: '#2d3748', borderRadius: '16px', padding: '2rem', textDecoration: 'none', color: '#e2e8f0', border: '1px solid #4a5568', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+            <div style={{ color: '#68d391', marginBottom: '1rem' }}><Map size={64} strokeWidth={1.5} /></div>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontFamily: 'Outfit' }}>Divers</h3>
+            <p style={{ margin: 0, color: '#a0aec0', textAlign: 'center', fontFamily: 'Outfit' }}>Géographie, Recettes & Projets.</p>
+        </Link>
+
       </div>
     </div>
   );

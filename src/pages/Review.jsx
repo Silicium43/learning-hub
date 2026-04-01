@@ -135,7 +135,7 @@ function Review() {
     const isCorrect = targetStr === inputStr || inputStr.includes(targetStr) || targetStr.includes(inputStr);
     
     if (isCorrect) {
-      setFeedback({ type: 'success', text: 'Correct ! ✨' });
+      setFeedback({ type: 'success', text: 'Correct ! ✨', selected: val });
       setStats(s => ({ ...s, correct: s.correct + 1 }));
       
       // Remove from recent errors if in cram mode
@@ -145,7 +145,7 @@ function Review() {
           await localforage.setItem('nhg_recent_errors', errs);
       }
     } else {
-      setFeedback({ type: 'error', text: `Faux : ${currentTask.taskType === 'reading' ? toHiragana(currentTask.reading) : currentTask.meaning}` });
+      setFeedback({ type: 'error', text: `Faux : ${currentTask.taskType === 'reading' ? toHiragana(currentTask.reading) : currentTask.meaning}`, selected: val });
       setStats(s => ({ ...s, incorrect: s.incorrect + 1 }));
       setItemErrors(prev => ({ ...prev, [currentTask.id]: true }));
       
@@ -269,7 +269,7 @@ function Review() {
                           className="opt-btn"
                           disabled={!!feedback}
                           style={{
-                              background: feedback && (opt === (currentTask.taskType === 'meaning' ? currentTask.meaning : toHiragana(currentTask.reading))) ? 'var(--success-color)' : 'var(--surface-color-light)',
+                              background: feedback && (opt === (currentTask.taskType === 'meaning' ? currentTask.meaning : toHiragana(currentTask.reading))) ? 'var(--success-color)' : (feedback && feedback.type === 'error' && feedback.selected === opt.toLowerCase() ? 'var(--accent-color)' : 'var(--surface-color-light)'),
                               color: 'var(--text-primary)', padding: '1.2rem 1rem', fontSize: '1.1rem', border: '1px solid var(--border-color)', borderRadius: '12px'
                           }}
                           onClick={() => submitAnswer(opt)}>

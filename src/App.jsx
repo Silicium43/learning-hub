@@ -1,9 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import './App.css';
 
 // Main Hub
 import Hub from './pages/Hub';
+import MiscHub from './pages/misc/MiscHub';
 
 // Japanese Modules
 import Home from './pages/Home';
@@ -12,6 +13,7 @@ import Review from './pages/Review';
 import Lesson from './pages/Lesson';
 import Quiz from './pages/Quiz';
 import Stats from './pages/Stats';
+import KanjiLexicon from './pages/KanjiLexicon';
 
 // French Modules
 import FrenchHub from './pages/fr/FrenchHub';
@@ -40,8 +42,8 @@ function ThemeSetter() {
 
 function GlobalHeader() {
   const location = useLocation();
-  // Hide global header on the hub, french, spanish, and portuguese pages
-  if (location.pathname === '/' || location.pathname.startsWith('/fr') || location.pathname.startsWith('/es') || location.pathname.startsWith('/pt')) {
+  // Hide global header on the hub, french, spanish, portuguese, and misc pages
+  if (location.pathname === '/' || location.pathname.startsWith('/fr') || location.pathname.startsWith('/es') || location.pathname.startsWith('/pt') || location.pathname.startsWith('/misc')) {
     return null;
   }
   return (
@@ -68,12 +70,16 @@ function App() {
             <Route path="/jp/lesson" element={<Lesson />} />
             <Route path="/jp/quiz" element={<Quiz />} />
             <Route path="/jp/stats" element={<Stats />} />
+            <Route path="/jp/lexicon" element={<KanjiLexicon />} />
             
             {/* French */}
             <Route path="/fr" element={<FrenchHub />} />
             <Route path="/fr/conjugation" element={<FrenchConjugation />} />
             <Route path="/fr/vocab" element={<FrenchVocab />} />
-            <Route path="/fr/geography" element={<FrenchGeography />} />
+
+            {/* Misc */}
+            <Route path="/misc" element={<MiscHub />} />
+            <Route path="/misc/geography" element={<FrenchGeography />} />
 
             {/* Spanish */}
             <Route path="/es" element={<SpanishHub />} />
