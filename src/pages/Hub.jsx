@@ -51,7 +51,7 @@ function Hub() {
         </Link>
 
         {/* Vidéothèque */}
-        <a href="/learning-hub/biblio-films/index.html" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '16px', padding: '2rem', textDecoration: 'none', color: '#ffffff', border: '1px solid #f472b6', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 0 15px rgba(244, 114, 182, 0.2)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+        <a href="https://silicium43.github.io/biblio-films/" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '16px', padding: '2rem', textDecoration: 'none', color: '#ffffff', border: '1px solid #f472b6', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 0 15px rgba(244, 114, 182, 0.2)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
             <div style={{ color: '#22d3ee', marginBottom: '1rem' }}><Film size={64} strokeWidth={1.5} /></div>
             <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontFamily: 'Orbitron, sans-serif' }}>Vidéothèque</h3>
             <p style={{ margin: 0, color: '#94a3b8', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Ma collection (Vaporwave)</p>
